@@ -1,0 +1,96 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/sandbox
+docs:
+- https://mandateshield.com/sandbox
+- https://mandateshield.com/pricing
+- https://mandateshield.com/connect
+- https://mandateshield.com/specifications/strict-lifecycle-sandbox/v1
+summary: 'MandateShield publishes an unusually explicit test surface: a zero-account strict-lifecycle sandbox endpoint
+  that simulates all eleven lifecycle stages with isolated fixtures, an anonymous analysis allowance on the v1 preflight
+  endpoint, a test/live key-prefix split, a browser-local conformance runner and a free guided private pilot. Because
+  the service takes no payment credentials by design there are no test cards, test bank accounts or test clocks
+  — the fixtures are signed test mandates and keys generated inside the run.'
+test_vs_live:
+  key_prefixes:
+    test: ms_test_...
+    live: ms_live_...
+  source: openapi securitySchemes.bearerAuth.bearerFormat and the A2A card securitySchemes
+  semantics: sandbox, test and v1 results always set enforcement_authorized=false; only a strict v2 live decision
+    can create a RESERVED execution authorization. A test key persists decisions (up to 5,000 per month) so integration
+    tests are repeatable; the anonymous sandbox keeps no replay history.
+  key_roles: VERIFY keys issue challenges and strict decisions; PROCESSOR keys are bound to one processor_audience
+    and can only call execution transitions and permit redemption.
+sandbox:
+  present: true
+  account_required: false
+  endpoint: POST https://mandateshield.com/api/v2/sandbox/lifecycle
+  operation: runStrictLifecycleSandbox
+  specification: https://mandateshield.com/specifications/strict-lifecycle-sandbox/v1
+  page: https://mandateshield.com/sandbox
+  stages:
+  - Fresh challenge issued
+  - Account-pinned authority verified
+  - Active mandate evaluated
+  - Decision evidence signed
+  - Budget reserved atomically
+  - Authorization consumed once
+  - Provider-bound permit issued
+  - Fresh permit claim granted
+  - Permit replay suppressed
+  - Sandbox provider attested
+  - Terminal reconciliation recorded
+  guarantees_stated:
+    money_moved: false
+    external_provider_contacted: false
+    payment_credentials: none accepted
+    production_authorization: none
+    independent_organization_involved: false
+  rate_limit: 429 "Public sandbox rate limit exceeded" (numeric limit not published)
+  note: The separate provider key is generated inside the same sandbox run; every accepted response must explicitly
+    affirm money_moved=false. The browser page renders the server response and marks nothing complete until the
+    endpoint returns it.
+anonymous_analysis:
+  endpoint: POST https://mandateshield.com/api/v1/preflight (and /api/v1/batch)
+  operation: evaluatePurchase
+  allowance: Validate 200 mandates every day without an account (pricing page, "NO-ACCOUNT SANDBOX · CURRENT LIMITS")
+  persisted: false
+  probe:
+    fetched: '2026-09-19'
+    request: POST /api/v1/preflight with body {} and no Authorization header
+    http_status: 200
+    response: decision BLOCK, score 0, 12+ findings (UNSUPPORTED_PROTOCOL, MISSING_MANDATE_ID, MISSING_AGENT_ID,
+      MISSING_MERCHANT, INVALID_AMOUNT, INVALID_CURRENCY, MISSING_SPEND_CAP, ..., REPLAY_GUARD_MISSING) and a sha256
+      receipt hash
+    note: The live policy engine answers anonymously with structured findings; no rate-limit headers were returned
+      on this response.
+  browser_tools:
+  - https://mandateshield.com/tools/ai-agent-payment-validator
+  - https://mandateshield.com/tools/ai-payment-mandate-builder
+  - https://mandateshield.com/tools/cryptographic-authority-verifier
+  - https://mandateshield.com/tools/protocol-bridge
+test_key:
+  how: Sign in (Sign in with ChatGPT) and create a test key in the dashboard
+  quota: up to 5,000 persisted decisions per month
+  source: https://mandateshield.com/pricing
+conformance_runner:
+  url: https://mandateshield.com/conformance
+  offline_vectors: 8
+  integration_targets: 11
+  note: Eight deterministic vectors execute in the browser with no API key or request to MandateShield; the 19-vector
+    JSON profile is saved verbatim at conformance/mandateshield-com-conformance-vectors.json.
+trial_script:
+  url: https://mandateshield.com/sdk/mandateshield-trial.mjs
+  note: '"zeroAccountTrial" in server.json; a Node script that exercises the free path.'
+guided_pilot:
+  url: https://mandateshield.com/launch
+  account_required: true
+  cost: $0, no card
+  what: Bind your domain or public repository and complete one server-observed strict live reservation plus one
+    fresh permit redemption; no provider call or payment is submitted; completion is private unless separately published
+    with publication_consent=true.
+not_present:
+  test_cards: none — the service never receives card or bank credentials
+  test_bank_accounts: none
+  test_clocks: false
+  fixture_triggers: the sandbox run itself generates its fixtures; no separate trigger API

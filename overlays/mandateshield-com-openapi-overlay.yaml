@@ -1,0 +1,66 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist agent-readiness overlay for the MandateShield Payment Authority API
+  version: 1.0.0
+extends: openapi/_original/mandateshield-com-openapi.json
+x-generated: '2026-09-19'
+x-method: generated
+x-source: openapi/_original/mandateshield-com-openapi.json
+x-rationale: The harvested contract is complete on auth, errors and idempotency fields but does not link the cross-cutting
+  semantics this profile captured (reversibility windows, idempotency scope, rate-limit behaviour, sandbox). This
+  overlay attaches those as x- extensions WITHOUT mutating the original; apply with any Overlay 1.0.0 processor
+  against openapi/_original/mandateshield-com-openapi.json.
+actions:
+- target: $.info
+  description: Point at the API Evangelist profile artifacts.
+  update:
+    x-apievangelist:
+      profile: https://github.com/api-evangelist/mandateshield-com
+      conventions: conventions/mandateshield-com-conventions.yml
+      errors: errors/mandateshield-com-problem-types.yml
+      error_codes: errors/mandateshield-com-error-codes.yml
+      rate_limits: rate-limits/mandateshield-com-rate-limits.yml
+      sandbox: sandbox/mandateshield-com-sandbox.yml
+      mcp: mcp/mandateshield-com-mcp.yml
+      a2a: a2a/mandateshield-com-a2a.yml
+- target: $.servers[0]
+  description: Name the single server.
+  update:
+    description: Production and anonymous sandbox share this host; test vs live is selected by the ms_test_/ms_live_
+      key, and anonymous v1 calls use the non-persisted sandbox.
+- target: $.paths['/api/v2/verify'].post
+  description: Reversibility and idempotency notes for the reservation-creating operation.
+  update:
+    x-idempotency:
+      field: envelope.idempotency_key
+      boundary: account-wide
+    x-reversibility:
+      reversal: transitionExecutionAuthorization action RELEASE or automatic expiry (expires_at)
+      window: until CONSUME or expires_at; no fixed duration published
+- target: $.paths['/api/v2/execution-authorizations'].post
+  description: Reversibility notes for CONSUME.
+  update:
+    x-reversibility:
+      reversal: action RELEASE for confirmed non-submission; COMMIT finalizes
+      window: before the settlement deadline (length not published); unresolved outcomes become SETTLEMENT_UNKNOWN
+        and are never auto-released
+- target: $.paths['/api/v2/execution-permits/redeem'].post
+  description: Single-winner semantics.
+  update:
+    x-reversibility:
+      reversal: null
+      note: 'Not reversible: single-winner claim; permit max lifetime 60 s, max_uses 1; exact retry returns the
+        same claim with permission false.'
+- target: $.paths['/api/v1/preflight'].post
+  description: Mark the analysis-only profile as the dry-run mode.
+  update:
+    x-dry-run: true
+    x-rate-limit: 200 mandate validations per day anonymously; 5,000 persisted decisions per month on a test key;
+      429 with no rate-limit headers
+- target: $.paths['/api/v2/sandbox/lifecycle'].post
+  description: Mark the zero-account sandbox.
+  update:
+    x-sandbox:
+      account_required: false
+      money_moved: false
+      external_provider_contacted: false

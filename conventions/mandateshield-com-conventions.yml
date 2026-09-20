@@ -1,0 +1,208 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/docs
+derived_from: openapi/_original/mandateshield-com-openapi.json
+docs:
+- https://mandateshield.com/docs
+- https://mandateshield.com/developers
+- https://mandateshield.com/security
+- https://mandateshield.com/integrations
+base_url: https://mandateshield.com
+media_type: application/json
+auth:
+  style: HTTP Bearer API keys with two roles, plus a hosting-injected session assertion for the account control
+    plane
+  detail: authentication/mandateshield-com-authentication.yml
+  key_roles:
+    VERIFY: issues challenges and strict decisions (createVerificationChallenge, verifyCryptographicAuthority, verifyCryptographicAuthorityBatch);
+      cannot transition state
+    PROCESSOR: bound at creation to one exact processor_audience; can call transitionExecutionAuthorization, redeemExecutionPermit
+      and reportProviderSubmission; cannot issue challenges or create authorizations
+  key_prefixes:
+    test: ms_test_
+    live: ms_live_
+  anonymous_surface:
+  - evaluatePurchase
+  - evaluatePurchaseBatch
+  - normalizeAgentPaymentProtocol
+  - runStrictLifecycleSandbox
+  - verifyDecisionReceipt
+  - verifyExecutionPermit
+  - verifyExecutionReceipt
+  - getReceiptTransparency
+  - proof network and deployment-proof reads
+  - getThreatIntelligence
+idempotency:
+  supported: true
+  coverage: partial
+  mechanism: request-body field idempotency_key (pattern ^[A-Za-z0-9._:~-]{1,256}$); redeemExecutionPermit additionally
+    accepts an Idempotency-Key header
+  scope:
+  - operation: evaluatePurchase
+    path: POST /api/v1/preflight
+    field: idempotency_key (required, PurchaseEnvelope)
+  - operation: evaluatePurchaseBatch
+    path: POST /api/v1/batch
+    field: idempotency_key per envelope item
+  - operation: verifyCryptographicAuthority
+    path: POST /api/v2/verify
+    field: envelope.idempotency_key (required) — the account-wide replay key for the attempt
+  - operation: verifyCryptographicAuthorityBatch
+    path: POST /api/v2/batch
+    field: envelope.idempotency_key per item ("every item needs its own idempotency key and unconsumed challenge")
+  - operation: transitionExecutionAuthorization
+    path: POST /api/v2/execution-authorizations
+    field: 'idempotency_key (required, transition-specific: e.g. <attempt>:consume)'
+  - operation: redeemExecutionPermit
+    path: POST /api/v2/execution-permits/redeem
+    field: idempotency_key in body and Idempotency-Key header; an exact retry returns the same claim with permission
+      false
+  - operation: normalizeAgentPaymentProtocol
+    path: POST /api/v2/normalize
+    field: context.idempotency_key (optional; projection is non-executable)
+  not_covered:
+  - operation: createVerificationChallenge
+    why: consume-once server nonce (5 minutes) rather than a caller key
+  - operation: reportProviderSubmission
+    why: keyed by provider_submission_id/permit_id/claim_id; stored as a CALLER_ASSERTED hint, not a state transition
+  - operation: setGlobalExecutionInterlock
+    why: compare-and-set on expected_generation (optimistic concurrency), not an idempotency key
+  - operation: createPublicProofChallenge
+    why: no idempotency field
+  - operation: issuePublicProofAttestation
+    why: no idempotency field
+  - operation: runStrictLifecycleSandbox
+    why: stateless simulation
+  - operation: receiveStripeProviderWebhook
+    why: inbound Stripe event; Stripe-Signature authenticated, treated as a hint
+  uniqueness_boundary: account-wide, not per API key — "rotating credentials cannot make a consumed attempt executable
+    again"
+  retention: undocumented as a duration; described as durable account-wide replay tombstones that survive API-key
+    rotation. Evidence retention per plan is 30/60/90 days (plans/).
+  replay_semantics: Keep one stable key per intended payment across transport retries; use distinct stable keys
+    for VERIFY, CONSUME and the terminal COMMIT/RELEASE; reconcile a timed-out request before creating a new attempt.
+    An exact-input retry is not a second billed decision. Provider-native idempotency remains mandatory because
+    MandateShield never submits to the provider itself.
+  header: Idempotency-Key (redeemExecutionPermit only)
+  note: coverage is partial rather than full because the mechanism spans the whole payment-authority write path
+    (7 operations) but not the account interlock, proof-network writes or the submission report. Every operation
+    that reserves, consumes or claims spend authority carries a key.
+pagination:
+  style: limit-only (no cursor, no offset)
+  params:
+  - limit (query)
+  max_items: 50
+  applies_to:
+  - listPublicProofAttestations
+  - listDeploymentActivationProofs
+  response_fields:
+  - proofs[] (maxItems 50)
+  - status EMPTY|ACTIVE
+  - semantics{}
+  note: The two list endpoints return at most 50 summaries; no continuation token is defined.
+expansion:
+  supported: false
+sparse_fields:
+  supported: false
+metadata:
+  supported: false
+  note: No free-form metadata field; envelopes are closed objects (additionalProperties false throughout).
+request_tracing:
+  request_id_header: null
+  note: No request-id header is documented or observed. Traceability is carried by receipt_id (msr_...), permit_id
+    (msp_...), claim_id and provider_submission_id in bodies, and by the sha256 receipt hash returned even on anonymous
+    v1 decisions.
+versioning:
+  style: URI path generation (/api/v1 analysis-only, /api/v2 strict) plus semver contract/product versions with
+    immutable versioned documents
+  header: null
+  detail: lifecycle/mandateshield-com-lifecycle.yml
+  terms_version_header: x-mandateshield-terms-version (observed 2026-07-28.2 on live responses)
+errors:
+  envelope: '{ error: string, code?: string, enforcement_authorized?: boolean }'
+  media_type: application/json
+  rfc9457: false
+  detail: errors/mandateshield-com-problem-types.yml
+  decision_findings: Decisions (not HTTP errors) carry findings[] {code, message, severity} drawn from the 91-code
+    reason registry — errors/mandateshield-com-error-codes.yml
+  fail_closed: 400/401/402/403/404/409/410/413/429/503 all leave execution unauthorized; an unavailable outcome
+    check keeps the authorization reserved and forbids a blind provider retry.
+rate_limiting:
+  status: 429
+  headers: []
+  detail: rate-limits/mandateshield-com-rate-limits.yml
+cors:
+  options_operations: 17
+  allow_origin: '* (observed on /api/v1/preflight)'
+  note: Every public endpoint has an explicit OPTIONS operation ("Inspect CORS support") in the contract.
+link_headers: 'Responses carry Link: rel="terms-of-service", rel="privacy-policy", rel="describedby" (/.well-known/legal.json).'
+money_representation:
+  fiat: integer minor units (max_amount_minor) with ISO 4217 currency; exact major/minor agreement is checked and
+    zero-decimal currencies must not be rounded
+  atomic_assets: canonical decimal digit string atomic_units with explicit asset_decimals (0–30), asset_id (e.g.
+    eip155:8453/erc20:0x...), network and resource; compared with BigInt semantics, never converted to Number
+dry_run:
+  supported: true
+  mode: v1 analysis-only profile
+  operations:
+  - evaluatePurchase
+  - evaluatePurchaseBatch
+  - normalizeAgentPaymentProtocol
+  - runStrictLifecycleSandbox
+  semantics: Always enforcement_authorized=false, even with a live key; returns the same decision/findings shape
+    as strict v2 without reserving authority. The zero-account lifecycle sandbox rehearses the full 11-stage state
+    machine with isolated fixtures (money_moved=false).
+  docs: https://mandateshield.com/docs#analysis-only
+reversibility:
+  grade: documented
+  money_movement: none — MandateShield never moves money; a provider refund/void belongs to the provider (Stripe
+    / x402) and is out of this contract's scope
+  write_surfaces:
+  - surface: RESERVED execution authorization (created by verifyCryptographicAuthority / verifyCryptographicAuthorityBatch)
+    reversal:
+      operation: transitionExecutionAuthorization
+      action: RELEASE
+      effect: returns the reserved cumulative-budget headroom
+    automatic_reversal: an unconsumed reservation expires (expires_at on ExecutionAuthorizationReservation; 410
+      "Reserved execution authorization expired") and its budget is returned
+    window: until CONSUME or until expires_at; the reservation is described as "short" and no fixed duration is
+      published
+    docs: 'https://mandateshield.com/docs (Cumulative budgets: "COMMIT transfers reserved spend to committed spend;
+      RELEASE or an unconsumed expiry returns it.")'
+  - surface: CONSUMED execution authorization (transitionExecutionAuthorization CONSUME)
+    reversal:
+      operation: transitionExecutionAuthorization
+      action: RELEASE
+      effect: returns budget for a confirmed non-submission; COMMIT finalizes instead
+    window: before the settlement deadline; after it an unresolved outcome is charged conservatively and never auto-released
+      — the deadline's length is not published
+    constraint: '"If submission may have happened but its result is unknown, do not RELEASE or submit again." Autonomous
+      RELEASE/COMMIT happens only on PROVIDER_API_VERIFIED or CHAIN_FINALIZED evidence.'
+    docs: https://mandateshield.com/docs
+  - surface: Permit claim (redeemExecutionPermit)
+    reversal: null
+    window: not reversible — single-winner claim; the permit itself lives at most 60 seconds with max_uses 1, and
+      an exact retry returns the same claim with permission false
+    docs: https://mandateshield.com/docs (Fresh provider-bound claim)
+  - surface: Account-wide execution interlock PAUSE (setGlobalExecutionInterlock)
+    reversal:
+      operation: setGlobalExecutionInterlock
+      action: RESUME
+      effect: re-enables new execution; compare-and-set on expected_generation
+    window: none stated (any time, by the authenticated account owner)
+    docs: https://mandateshield.com/specifications/global-execution-interlock/v1
+  - surface: v1 analysis decisions / sandbox runs
+    reversal: na
+    window: na
+    note: Non-executable; nothing to reverse.
+  note: 'Graded documented, not verified: reversal operations exist (RELEASE, RESUME, expiry) and the docs name
+    the conditions, but no stated numeric window (reservation TTL, settlement deadline) is published for RELEASE.
+    The 60-second figure is the permit lifetime, not a reversal window.'
+cross_links:
+  authentication: authentication/mandateshield-com-authentication.yml
+  errors: errors/mandateshield-com-problem-types.yml
+  error_codes: errors/mandateshield-com-error-codes.yml
+  lifecycle: lifecycle/mandateshield-com-lifecycle.yml
+  rate_limits: rate-limits/mandateshield-com-rate-limits.yml
+  sandbox: sandbox/mandateshield-com-sandbox.yml
+  data_model: data-model/mandateshield-com-data-model.yml

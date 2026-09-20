@@ -64,5 +64,14 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-MandateShield is a company surfaced via the API Evangelist harvest backlog (source: a2a-registry) and added to the network as a stub for full-pipeline profiling.
-- https://mandateshield.com/
+MandateShield is a fail-closed authority-verification and execution-evidence boundary for autonomous AI-agent purchases, operated from Bern, Switzerland. It binds a signed purchase approval (AP2, TAP, UCP, x402, MPP, ACP or a custom envelope) to a registered mandate and a pinned issuer key, reserves cumulative budget atomically, consumes the reservation into a one-use provider-bound execution permit for an exact Stripe PaymentIntent or x402 request, and then checks the provider outcome without trusting the caller before issuing a signed terminal receipt. The hosted service never moves money or holds payment credentials. It publishes an OpenAPI 3.1 contract with 26 operations, a remote MCP server whose tools/list answers anonymously, a signed A2A agent card, llms.txt, an SPDX SBOM, a JWKS, a 91-code reason registry, a 19-vector conformance suite and self-hosted JavaScript, Python and Go clients.
+
+## What this profile captured (2026-09-19)
+
+- `openapi/` — the provider's OpenAPI 3.1.0 contract v3.4.0 (verbatim JSON in `_original/`, faithful YAML alongside), 25 paths / 43 operations.
+- `mcp/` — the hosted MCP server at `https://mandateshield.com/api/mcp` (anonymous `tools/list`, 3 tools), its `server.json` registry manifest and a tool-to-operation crosswalk.
+- `a2a/` — the signed A2A agent card served at `/.well-known/agent-card.json`, graded against A2A 1.0.
+- `well-known/` — nine served discovery documents (security.txt, JWKS, AI catalog, MCP server card, payment-authority lifecycle, evaluation, discovery, legal) and every recorded miss.
+- `llms/`, `packages/`, `cli/`, `sandbox/`, `plans/`, `rate-limits/`, `lifecycle/`, `changelog/`, `conventions/` (idempotency + reversibility), `errors/` (HTTP problems + the 91-code reason registry), `conformance/` (+ the 19-vector suite), `data-model/`, `regulatory/` (SBOM, subprocessors, DPA incident notice, DSR, GPC), `security/`, `authentication/`, `agentic-access/`, `skills/`, `overlays/`.
+
+Operator: Gökhan Vodinali (individual operator, Bern, Switzerland) — https://mandateshield.com/legal

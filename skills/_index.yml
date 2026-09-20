@@ -1,0 +1,42 @@
+generated: '2026-09-19'
+method: generated
+source: Packaged Agent Skills generated from the MandateShield OpenAPI (openapi/mandateshield-com-openapi.yml, verbatim
+  source in openapi/_original/). Every step is grounded in an operationId verified in the spec; cross-cutting rules
+  cite conventions/, errors/, rate-limits/, authentication/ and mcp/. MandateShield ships a plugin whose manifest
+  names a skills/ directory inside its zip (plugins/mandateshield/plugin.json); no provider-published skill files
+  are served at a standalone URL (/skills, /AGENTS.md, /SKILL.md, /.well-known/agent-skills/index.json all 404 on
+  2026-09-19), so these are generated.
+skills:
+- file: mandateshield-com-analysis-only-authority-check.md
+  name: Analysis-only payment authority check (no account)
+  api: openapi/mandateshield-com-openapi.yml
+  operations:
+  - evaluatePurchase
+  - evaluatePurchaseBatch
+  - normalizeAgentPaymentProtocol
+- file: mandateshield-com-strict-lifecycle-reserve-consume-redeem.md
+  name: 'Strict lifecycle: challenge, verify, consume, redeem, reconcile'
+  api: openapi/mandateshield-com-openapi.yml
+  operations:
+  - createVerificationChallenge
+  - verifyCryptographicAuthority
+  - verifyCryptographicAuthorityBatch
+  - transitionExecutionAuthorization
+  - verifyExecutionPermit
+  - redeemExecutionPermit
+  - reportProviderSubmission
+  - verifyExecutionReceipt
+- file: mandateshield-com-verify-receipts-offline-and-online.md
+  name: Verify decision, permit and execution receipts
+  api: openapi/mandateshield-com-openapi.yml
+  operations:
+  - verifyDecisionReceipt
+  - getReceiptTransparency
+  - verifyExecutionPermit
+  - verifyExecutionReceipt
+- file: mandateshield-com-zero-account-lifecycle-sandbox.md
+  name: Rehearse the full lifecycle in the zero-account sandbox
+  api: openapi/mandateshield-com-openapi.yml
+  operations:
+  - runStrictLifecycleSandbox
+  - evaluatePurchase

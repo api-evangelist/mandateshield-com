@@ -1,0 +1,227 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/conformance cross-checked against openapi/_original/mandateshield-com-openapi.json,
+  https://mandateshield.com/docs, https://mandateshield.com/security and live /.well-known probes on 2026-09-19
+compliance_program_published: false
+compliance_note: 'MandateShield explicitly claims NO certification: the DPA (§3) says its measures "do not constitute
+  an ISO, SOC or penetration-test certification", and /trust states "No independent audit, penetration test, certification,
+  public customer reference or paid-revenue evidence is currently established." No Compliance pointer is emitted
+  for that reason.'
+standards:
+- id: openapi-3.1
+  name: OpenAPI 3.1
+  conforms: true
+  evidence: openapi/_original/mandateshield-com-openapi.json declares openapi 3.1.0, info.version 3.4.0, 25 paths,
+    43 operations (17 OPTIONS) with unique operationIds, 77 component schemas and two securitySchemes; served from
+    https://mandateshield.com/openapi.json (200) with an immutable copy at /openapi/3.4.0.json.
+- id: rfc9116-security-txt
+  name: RFC 9116 security.txt
+  conforms: true
+  evidence: https://mandateshield.com/.well-known/security.txt (200, text/plain) with Contact, Expires, Preferred-Languages,
+    Canonical and Policy fields; saved at well-known/mandateshield-com-security.txt.
+- id: a2a-agent-card
+  name: A2A Agent Card discovery
+  conforms: true
+  grade: flavored
+  evidence: https://mandateshield.com/.well-known/agent-card.json (200, application/a2a+json); graded in a2a/mandateshield-com-a2a.yml
+    (no top-level protocolVersion/url; supportedInterfaces with per-interface protocolVersion 1.0 and 0.3).
+- id: mcp
+  name: Model Context Protocol (Streamable HTTP)
+  conforms: true
+  evidence: POST https://mandateshield.com/api/mcp initialize returned protocolVersion 2025-06-18 and tools/list
+    returned 3 tools with inputSchema, anonymously (mcp/mandateshield-com-tools-list.json). Docs state the stateless
+    2026-07-28 server/discover flow is also supported.
+- id: mcp-registry-server-json
+  name: MCP registry server.json (schema 2025-12-11)
+  conforms: true
+  evidence: https://mandateshield.com/server.json declares $schema https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json,
+    name com.mandateshield/payment-authority, remotes[].type streamable-http.
+- id: rfc7517-jwks
+  name: RFC 7517 JWK Set
+  conforms: true
+  evidence: https://mandateshield.com/.well-known/jwks.json (200, application/jwk-set+json) publishes the ES256
+    receipt-signing keys; a release-scoped archive is at /evidence/v1.13.0/receipt-verification-jwks.json.
+- id: rfc7515-jws-es256
+  name: RFC 7515 JWS (ES256) signed receipts and permits
+  conforms: true
+  evidence: 'Docs: decision receipts are ES256 JWS; execution permits are ES256 MSP+JWT (max lifetime 60 s, max_uses
+    1); execution receipts are ES256 MSE+JWT. Schemas SignedDecisionReceipt, SignedExecutionPermit, SignedExecutionReceipt
+    in the contract; verification endpoints verifyDecisionReceipt, verifyExecutionPermit, verifyExecutionReceipt.'
+- id: rfc7638-jwk-thumbprint
+  name: RFC 7638 JWK thumbprint key pinning
+  conforms: true
+  evidence: ChallengeRequest.key_thumbprint (pattern ^[A-Za-z0-9_-]{43}$) must be the RFC 7638 thumbprint of an
+    account-pinned key; docs "Each pinned key records its exact issuer, audience, protocol and RFC 7638 thumbprint."
+- id: rfc9421-http-message-signatures
+  name: RFC 9421 HTTP Message Signatures (TAP adapter)
+  conforms: partial
+  evidence: 'Docs: the TAP adapter "accepts normalized TAP-shaped, RFC 9421-style components with a content-digest
+    binding and maximum 15-minute signature window"; HttpSignatureInput schema in the contract. Parsing raw Visa
+    structured fields remains external.'
+- id: sd-jwt-kb-jwt
+  name: SD-JWT with key binding (AP2 closed-payment credential)
+  conforms: partial
+  evidence: 'Adapter AP2_CLOSED_PAYMENT_SD_JWT; docs: "an AP2-shaped closed-payment SD-JWT projection with RFC 9901
+    KB-JWT ... Unbound, duplicated or colliding SD-JWT disclosures fail closed." Validation of checkout_jwt hash,
+    delegate chain and AP2 issuer registry remains external.'
+- id: rfc8615-well-known
+  name: RFC 8615 well-known URIs
+  conforms: true
+  evidence: Nine documents served under /.well-known/ (well-known/mandateshield-com-well-known.yml).
+- id: spdx-2.3
+  name: SPDX 2.3 SBOM
+  conforms: true
+  evidence: https://mandateshield.com/evidence/v1.13.0/sbom.spdx.json — spdxVersion SPDX-2.3, 727 packages, created
+    2026-07-28T14:25:22Z (regulatory/mandateshield-com-regulatory-posture.yml).
+- id: iso-4217
+  name: ISO 4217 currency codes
+  conforms: true
+  evidence: Reason code INVALID_CURRENCY ("Provide an ISO 4217 currency code"); fiat amounts are integer minor units
+    with the currency's exponent; conformance vector "Fractional zero-decimal currency" (JPY) must BLOCK.
+- id: caip-2-caip-19
+  name: CAIP-2 / CAIP-19 chain and asset identifiers
+  conforms: partial
+  evidence: Docs x402 example binds network "eip155:8453" and asset_id "eip155:8453/erc20:0x8335...2913" and requires
+    both plus asset_decimals to match the registered mandate. The contract types them as free strings (no CAIP pattern
+    is enforced in the schema).
+- id: idempotency
+  name: Idempotency keys on mutating operations
+  conforms: true
+  evidence: idempotency_key required on PurchaseEnvelope and ExecutionAuthorizationTransitionRequest; Idempotency-Key
+    header on redeemExecutionPermit; account-wide replay boundary (conventions/, coverage partial).
+- id: rfc9457-problem-details
+  name: RFC 9457 Problem Details
+  conforms: false
+  evidence: 0 application/problem+json responses; errors use a custom {error, code, enforcement_authorized} envelope.
+- id: oauth2
+  name: OAuth 2.0
+  conforms: false
+  evidence: No oauth2 securityScheme; bearer API keys (ms_test_/ms_live_). /.well-known/oauth-authorization-server
+    and /.well-known/oauth-protected-resource both 404.
+- id: oidc
+  name: OpenID Connect
+  conforms: false
+  evidence: /.well-known/openid-configuration 404. Dashboard sign-in is "Sign in with ChatGPT" (redirect to auth.openai.com
+    observed), i.e. MandateShield is an OIDC relying party, not a provider.
+- id: rfc9727-api-catalog
+  name: RFC 9727 API catalog
+  conforms: false
+  evidence: /.well-known/api-catalog 404.
+- id: apis-json
+  name: APIs.json
+  conforms: false
+  evidence: /apis.json, /.well-known/apis.json and /apis.yml all 404.
+- id: pagination
+  name: Pagination
+  conforms: partial
+  evidence: limit query parameter with a 50-item ceiling on the two list endpoints; no cursor or offset.
+domain_standards:
+  market: agentic payments / AI-agent purchase authorization
+  note: The contract itself declares the agent-payment protocols it adapts. These are recorded as contract signatures
+    with exact spec locations; whether the scorer recognises them as domain standards is the rubric's call, not
+    this file's. MandateShield states it claims no provider or facilitator adoption of any of them.
+  signatures:
+  - id: ap2
+    name: Agent Payments Protocol (AP2)
+    declared_in_contract: true
+    evidence:
+    - components.schemas.PurchaseEnvelope.properties.protocol.enum includes AP2
+    - POST /api/v2/normalize adapter enum AP2_CLOSED_PAYMENT_SD_JWT
+    - MCP tool normalize_agent_payment_protocol adapter enum
+    scope: closed-payment SD-JWT projection only (docs)
+  - id: x402-v2
+    name: x402 v2 (exact / EIP-3009)
+    declared_in_contract: true
+    evidence:
+    - PurchaseEnvelope.protocol enum X402
+    - adapter enum X402_V2_PAYMENT_REQUIRED
+    - reason codes HTTP_REQUEST_BINDING_INVALID, INVALID_ATOMIC_AMOUNT, ATOMIC_SPEND_CAP_EXCEEDED
+    - x402 chain verification component in /api/health
+    scope: pre-payment projection and CHAIN_FINALIZED outcome verification; MandateShield does not create or submit
+      the x402 payment signature
+  - id: mpp
+    name: Machine Payments Protocol (MPP HTTP Payment challenge)
+    declared_in_contract: true
+    evidence:
+    - PurchaseEnvelope.protocol enum MPP
+    - adapter enum MPP_HTTP_PAYMENT_CHALLENGE
+    - payee_identity oneOf branch provider MPP (TLS_SERVICE_ORIGIN verification)
+  - id: tap
+    name: Visa Trusted Agent Protocol (TAP)
+    declared_in_contract: true
+    evidence:
+    - PurchaseEnvelope.protocol enum TAP
+    - HttpSignatureInput schema (RFC 9421-style components, content-digest, 15-minute window per docs)
+  - id: ucp
+    name: Universal Commerce Protocol (UCP)
+    declared_in_contract: true
+    evidence:
+    - PurchaseEnvelope.protocol enum UCP
+    note: Protocol label only; no UCP-specific adapter or /.well-known/ucp.json (404).
+  - id: acp
+    name: Agentic Commerce Protocol (ACP)
+    declared_in_contract: true
+    evidence:
+    - PurchaseEnvelope.protocol enum ACP
+    note: Protocol label only; /.well-known/acp.json 404.
+  - id: stripe-payment-intents
+    name: Stripe PaymentIntents provider profile
+    declared_in_contract: true
+    evidence:
+    - provider_binding.profile STRIPE_PAYMENT_INTENTS_V1 (docs)
+    - POST /api/v2/provider-webhooks/stripe/{connectionId} with Stripe-Signature header (receiveStripeProviderWebhook)
+    - PROVIDER_API_VERIFIED evidence class
+  contract_enum_snapshot:
+    PurchaseEnvelope.protocol:
+    - AP2
+    - TAP
+    - UCP
+    - X402
+    - MPP
+    - ACP
+    - CUSTOM
+    normalize.adapter:
+    - AP2_CLOSED_PAYMENT_SD_JWT
+    - X402_V2_PAYMENT_REQUIRED
+    - MPP_HTTP_PAYMENT_CHALLENGE
+first_party_conformance_suite:
+  url: https://mandateshield.com/conformance
+  vectors_url: https://mandateshield.com/conformance/v1/vectors.json
+  file: conformance/mandateshield-com-conformance-vectors.json
+  profile_schema: https://mandateshield.com/conformance/v1/profile-schema.json
+  version: 1.0.0
+  status: vendor-profile
+  certification: false
+  deployment_attestation: false
+  vector_count: 19
+  offline_vectors: 8
+  integration_targets: 11
+  runner_classes:
+  - offline-policy
+  - strict-api-sequence
+  - cryptographic-integration
+  - receipt-integration
+  - execution-evidence-integration
+  disclaimer: Passing these vectors shows behavior against this published vendor profile only. It is not certification,
+    an independent security audit, or proof that any deployment is correctly configured or operated.
+security_architecture_claims:
+  source: https://mandateshield.com/security
+  deterministic_blocks:
+  - Overspend
+  - Merchant substitution
+  - Currency switch
+  - Expired or missing authority
+  - Forged authority
+  - Attacker-supplied key
+  - Issuer or audience swap
+  - Purchase substitution
+  - Challenge replay
+  - Payment replay
+  - Concurrent budget exhaustion
+  - Authorization-token reuse
+  - Verification-key privilege escalation
+  heuristic_review:
+  - Prompt override language
+  - Cross-account abuse signal
+  external:
+  - Gateway bypass

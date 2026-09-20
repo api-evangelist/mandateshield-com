@@ -1,0 +1,184 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/integrations
+docs: https://mandateshield.com/evidence/release-integrity
+note: 'MandateShield publishes its clients from its own origin only — "Hosted now; no registry claim" (integrations
+  page). The public registries were checked on 2026-09-19 and hold nothing: registry.npmjs.org/mandateshield, /@mandateshield/sdk,
+  /mandateshield-sdk and /@mandateshield/mcp all 404, pypi.org/pypi/mandateshield/json 404, and github.com/mandateshield
+  404 (the Go module path is an identity, not a hosted repo, which is why the provider''s own install line sets
+  GONOSUMDB and GOPROXY). Versions and dates below are read from the release manifest (https://mandateshield.com/evidence/v1.13.0/release-manifest.json,
+  released_at 2026-07-28T14:25:22Z), the SHA256SUMS file, the PEP 503 simple index and the GOPROXY @v/list. Every
+  artifact is covered by a SHA-256 checksum and an SPDX 2.3 SBOM (regulatory/).'
+registry_probes:
+- registry: npm
+  name: mandateshield
+  status: 404
+- registry: npm
+  name: '@mandateshield/sdk'
+  status: 404
+- registry: npm
+  name: mandateshield-sdk
+  status: 404
+- registry: pypi
+  name: mandateshield
+  status: 404
+- registry: github
+  name: github.com/mandateshield
+  status: 404
+packages:
+- language: javascript
+  name: MandateShield JavaScript SDK
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: 4dc7a2d950a400c7ab21f60e718397e5639e8bf4a05e99bc5da9a2ab781bcbca
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: Zero-dependency ESM client (built-in fetch/AbortController, Node.js 18+ or a current browser) covering
+    challenges, strict single and batch verification, execution transitions, receipt verification, MCP and A2A.
+  install: curl --proto '=https' --tlsv1.2 -fsSLo vendor/mandateshield/mandateshield.mjs https://mandateshield.com/sdk/v1.13.0/mandateshield.mjs
+- language: javascript
+  name: mandateshield-sdk (npm tarball)
+  registry: self-hosted npm tarball
+  official: true
+  url: https://mandateshield.com/packages/npm/1.13.0/mandateshield-sdk-1.13.0.tgz
+  install: npm install https://mandateshield.com/packages/npm/1.13.0/mandateshield-sdk-1.13.0.tgz
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: 9352b41150f68f22ba786b934ccfe796ac56b03e8676e0d2bcf0aea7a0049483
+  checksum_file: https://mandateshield.com/packages/npm/1.13.0/SHA256SUMS
+  rolling_url: https://mandateshield.com/sdk/mandateshield-sdk-current.tgz
+  entry_points:
+  - '@mandateshield/sdk'
+  - '@mandateshield/sdk/gateway/postgres'
+  - '@mandateshield/sdk/gateway/postgres/schema.sql'
+  note: Installable Node.js package; the import specifiers are documented in llms.txt. Not on the public npm registry.
+- language: python
+  name: mandateshield
+  registry: self-hosted PEP 503 simple index
+  official: true
+  url: https://mandateshield.com/packages/python/simple/mandateshield/
+  install: python3 -m pip install --index-url https://mandateshield.com/packages/python/simple --no-deps mandateshield==1.13.0
+  version: 1.13.0
+  published: '2026-07-28'
+  requires_python: '>=3.9'
+  versions_available:
+  - 1.8.0
+  - 1.9.0
+  - 1.10.0
+  - 1.11.0
+  - 1.12.0
+  - 1.13.0
+  sha256: 18ad6826016e68cfdc2988602ad483f1a33d5d39031bff3aa989fcfb2287fc82
+  note: Pure-Python wheel (py3-none-any). Not on PyPI.
+- language: go
+  name: github.com/mandateshield/mandateshield-go
+  registry: self-hosted GOPROXY
+  official: true
+  url: https://mandateshield.com/packages/go/github.com/mandateshield/mandateshield-go/@v/list
+  install: GONOSUMDB=github.com/mandateshield/mandateshield-go GOPROXY=https://mandateshield.com/packages/go go
+    get github.com/mandateshield/mandateshield-go@v1.13.0
+  version: v1.13.0
+  published: '2026-07-28'
+  requires_go: 1.21+
+  versions_available:
+  - v1.8.0
+  - v1.9.0
+  - v1.10.0
+  - v1.11.0
+  - v1.12.0
+  - v1.13.0
+  note: Module path names a github.com repository that does not exist publicly (404 on 2026-09-19); the provider's
+    install line bypasses the sum database for that reason.
+- language: javascript
+  name: MandateShield CLI
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield-cli.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: ef6cb1e88b41fbca36671986ba7c9d3a523c31d7d68b623f3befd98dbdf3c673
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: Standalone Node.js 18+ CLI, no third-party dependencies. Command surface in cli/mandateshield-com-cli.yml.
+  install: curl -fsSLo mandateshield-cli.mjs https://mandateshield.com/sdk/v1.13.0/mandateshield-cli.mjs && node
+    mandateshield-cli.mjs --help
+- language: javascript
+  name: MandateShield customer-side execution gateway
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield-gateway.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: a1a7f46e917d445c4451910ff3c60a0b8f6cb12dcf42f99116c9a23fa33949ff
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: Gateway v2 adapter run inside the customer's Gate; TypeScript declarations at mandateshield-gateway.d.ts.
+  types: https://mandateshield.com/sdk/v1.13.0/mandateshield-gateway.d.ts
+- language: javascript
+  name: MandateShield PostgreSQL DurableGatewayJournal
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield-postgres-gateway-journal.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: 3eeb20f837571ff4202abb3b95e9631dc92bdd3b5d21b786aa7c96e66e6f3482
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: First-party durable journal (atomic insert-if-absent, primary reads, compare-and-set) over one versioned
+    PostgreSQL migration; no PostgreSQL driver dependency.
+  types: https://mandateshield.com/sdk/v1.13.0/mandateshield-postgres-gateway-journal.d.ts
+  migration: https://mandateshield.com/sdk/v1.13.0/mandateshield-postgres-gateway-journal.sql
+- language: javascript
+  name: MandateShield Stripe PaymentIntents adapter
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield-stripe-payment-intents.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: a60fac531b0e690f2b2d51d668376a7403b47eac48b6bba57e8b6f5fcb616da0
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: Provider adapter for the STRIPE_PAYMENT_INTENTS_V1 profile.
+  types: https://mandateshield.com/sdk/v1.13.0/mandateshield-stripe-payment-intents.d.ts
+- language: javascript
+  name: MandateShield x402 v2 exact / EIP-3009 adapter
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield-x402-v2-exact.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: d8635dfe80aeacc2ca8885ec9436385d3b6a38caea20c5ed22dc994db6b231eb
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: Provider adapter for the x402 v2 exact (EIP-3009) settlement profile.
+  types: https://mandateshield.com/sdk/v1.13.0/mandateshield-x402-v2-exact.d.ts
+- language: javascript
+  name: MandateShield offline receipt verifier
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield-receipt-verifier.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: 5f88048f4a5455d48c9c6897c32b4d8adfeb8b4f27e32d59fc8bdc0fcf12479a
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: Verifies decision receipts locally against the published JWKS.
+- language: javascript
+  name: MandateShield offline execution-evidence verifier
+  registry: self-hosted (versioned URL on mandateshield.com)
+  official: true
+  url: https://mandateshield.com/sdk/v1.13.0/mandateshield-execution-evidence-verifier.mjs
+  version: 1.13.0
+  published: '2026-07-28'
+  sha256: 61fbdc9a6f23dbe23babb4926068e27a68c34254302e6c47306d36305e42df91
+  checksum_file: https://mandateshield.com/sdk/v1.13.0/SHA256SUMS
+  description: Verifies execution permits and terminal execution receipts locally.
+  types: https://mandateshield.com/sdk/v1.13.0/mandateshield-execution-evidence-verifier.d.ts
+- language: agent-plugin
+  name: MandateShield ChatGPT/Codex plugin
+  registry: self-hosted
+  official: true
+  url: https://mandateshield.com/plugins/mandateshield/plugin.json
+  package: https://mandateshield.com/plugins/mandateshield/1.13.0/mandateshield-plugin-1.13.0.zip
+  version: 1.13.0
+  published: '2026-07-28'
+  license: Apache-2.0
+  sha256: 040986211a5222fa40558602e293e32c8870821de65c1ee24b890d9e7ce11f21
+  note: Plugin manifest points at ./.mcp.json (the /api/mcp/plugin endpoint) and ./skills/. The manifest's skills
+    directory is inside the zip, not served at a standalone URL.

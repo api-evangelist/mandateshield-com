@@ -1,0 +1,131 @@
+generated: '2026-09-19'
+method: probed
+source: Live GET probes of the named /.well-known/* path list on mandateshield.com and www.mandateshield.com on
+  2026-09-19. Every row below is a request that was actually issued; every status is the one returned.
+summary:
+  hosts_probed: 2
+  paths_probed: 25
+  documents_served: 9
+  path_echo_control: passed
+  hosts_note: 'MandateShield runs everything on the apex host: the API base (servers[] https://mandateshield.com),
+    the MCP endpoint (/api/mcp), the A2A endpoint (/a2a) and the docs are all mandateshield.com, so the MCP-host
+    and API-host probes the contract requires collapse onto this one host. api./mcp./docs./status. subdomains do
+    not resolve (NXDOMAIN, 2026-09-19). www.mandateshield.com answers 308 to the apex for every path.'
+  note: 'A rich but non-OAuth well-known surface: RFC 9116 security.txt, an A2A agent card, an MCP server card,
+    a JWKS, an AI capability catalog and three provider-specific discovery documents (payment-authority lifecycle,
+    buyer evaluation, full discovery) plus a legal.json advertised via a Link: describedby header. No OAuth/OIDC
+    metadata, no RFC 9727 api-catalog, no APIs.json, no UCP/ACP, no AAuth. Unknown paths return a real text/plain
+    404, so the 200s above are documents, not an SPA catch-all.'
+hosts:
+- host: mandateshield.com
+  role: Website, API base, MCP server host, A2A host and docs host (single-host deployment)
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    content_type: text/plain
+    file: mandateshield-com-security.txt
+    standard: RFC 9116
+    note: Contact mailto:support@hemelion.com and https://mandateshield.com/responsible-disclosure; Policy https://mandateshield.com/responsible-disclosure;
+      Expires 2027-07-26T23:59:59Z; Canonical matches the fetch URL.
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    note: The MCP endpoint is on this same host (https://mandateshield.com/api/mcp), so this is also the RFC 9728
+      probe for the MCP resource server. MandateShield uses bearer API keys, not OAuth, and serves no protected-resource
+      metadata.
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/api-catalog.json
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/ucp.json
+    status: 404
+  - path: /.well-known/acp.json
+    status: 404
+  - path: /.well-known/aauth-resource.json
+    status: 404
+  - path: /.well-known/apis.json
+    status: 404
+  - path: /apis.json
+    status: 404
+  - path: /apis.yml
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 200
+    content_type: application/a2a+json; charset=utf-8
+    file: ../a2a/mandateshield-com-agent-card.json
+    standard: A2A Agent Card
+    note: Saved verbatim under a2a/ and graded in a2a/mandateshield-com-a2a.yml.
+  - path: /.well-known/agent.json
+    status: 404
+    note: Legacy pre-0.3 A2A path; not served.
+  - path: /.well-known/ai-catalog.json
+    status: 200
+    content_type: application/ai-catalog+json; charset=utf-8
+    file: mandateshield-com-ai-catalog.json
+    standard: ARD / AIR AI capability catalog specVersion 1.0
+    note: 'Four entries: the ChatGPT/Codex plugin package, the MCP server card, the A2A agent card and the OpenAPI
+      contract, each with representativeQueries.'
+  - path: /.well-known/mcp/server-card.json
+    status: 200
+    content_type: application/json; charset=utf-8
+    file: mandateshield-com-mcp-server-card.json
+    standard: MCP server card
+    note: Declares transport streamable-http at https://mandateshield.com/api/mcp, authentication.required false,
+      and the three tools with full inputSchema.
+  - path: /.well-known/jwks.json
+    status: 200
+    content_type: application/jwk-set+json; charset=utf-8
+    file: mandateshield-com-jwks.json
+    standard: RFC 7517 JWK Set
+    note: Public ES256 keys used to verify signed decision, permit and execution receipts. A release-scoped archive
+      also sits at /evidence/v1.13.0/receipt-verification-jwks.json.
+  - path: /.well-known/agent-payment-authority.json
+    status: 200
+    content_type: application/vnd.mandateshield.agent-payment-authority+json;v=1; charset=utf-8
+    file: mandateshield-com-agent-payment-authority.json
+    standard: MandateShield agent-payment-authority discovery profile v1.0.1 (provider-specific)
+    note: Names the canonical lifecycle (resolve_authority -> reserve -> consume -> redeem_once -> verify_outcome
+      -> retain_proof) with the HTTP operation for each stage, plus the HTTP, MCP and A2A interfaces and the emergency
+      interlock endpoint.
+  - path: /.well-known/mandateshield-evaluation.json
+    status: 200
+    content_type: application/vnd.mandateshield.evaluation+json;v=1; charset=utf-8
+    file: mandateshield-com-evaluation.json
+    standard: MandateShield evaluation schema v1.2 (provider-specific)
+    note: 'Machine-readable buyer due-diligence record: operator identity, name-collision disambiguation, publisher
+      assessment (independent security validation NOT_ESTABLISHED, external adoption NOT_ESTABLISHED) and the recommended
+      bounded pilot.'
+  - path: /.well-known/mandateshield.json
+    status: 200
+    content_type: application/json
+    file: mandateshield-com-discovery.json
+    standard: MandateShield full discovery manifest (provider-specific)
+    note: Mutable pointer; the immutable copy is https://mandateshield.com/discovery/1.13.0.json (also 200). Lists
+      endpoints, clients, capabilities, tools, schemas and specifications.
+  - path: /.well-known/legal.json
+    status: 200
+    content_type: application/json
+    file: mandateshield-com-legal.json
+    standard: provider-specific
+    note: 'Discovered from the Link: rel="describedby" header on API responses. Operator identity, governing law
+      (Switzerland), regulatory perimeter flags and document versions with source SHA-256 digests.'
+  - path: /.well-known/mcp.json
+    status: 404
+  - path: /.well-known/agent-skills/index.json
+    status: 404
+  - path: /.well-known/mandateshield-com-negative-control-9c41f7ab.json
+    status: 404
+    note: 'Negative control: a path that cannot exist. A real 404 (9-byte text/plain "Not Found"), so hits on this
+      host are not path echoes.'
+- host: www.mandateshield.com
+  role: Redirect alias
+  documents:
+  - path: /
+    status: 308
+    note: 308 Permanent Redirect to https://mandateshield.com/ ; every /.well-known/* request follows to the apex
+      host recorded above, so www is not a separate surface.

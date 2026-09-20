@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "trading_name": "MandateShield",
+  "operator": {
+    "name": "Gökhan Vodinali",
+    "address": "Gäbelbachstrasse 39, 3027 Bern",
+    "country": "CH",
+    "registration": "Individual operator; no commercial-register number provided",
+    "contact_email": "support@hemelion.com",
+    "entity_type": "INDIVIDUAL_OPERATOR",
+    "governing_law": "the substantive laws of Switzerland",
+    "exclusive_venue": "the ordinary courts at Bern, Switzerland",
+    "legal_form": "Individual operator; not a registered company",
+    "vat_or_uid": null
+  },
+  "regulatory_perimeter": {
+    "technical_software": true,
+    "holds_customer_funds": false,
+    "receives_payment_credentials_by_design": false,
+    "payment_processor": false,
+    "money_transmitter": false,
+    "bank": false,
+    "insurer": false,
+    "legal_adviser": false,
+    "kyc_aml_or_sanctions_service": false
+  },
+  "documents": {
+    "terms": {
+      "version": "2026-07-28.2",
+      "url": "https://mandateshield.com/terms",
+      "source_sha256": "086650a2c812598ae79c29e9efebb7a62a328df2e3da08b838ccc202ec448729"
+    },
+    "privacy": {
+      "version": "2026-07-28.3",
+      "url": "https://mandateshield.com/privacy",
+      "source_sha256": "a14fa99ab299604d24123a42f020ff2db35d08499d73bb0733418c6e4b2aad13"
+    },
+    "dpa": {
+      "version": "2026-07-26",
+      "url": "https://mandateshield.com/dpa",
+      "source_sha256": "ed72efcc8f5eb01051dd510484b25dc43c33c2fab04b23fb5726336299812879"
+    },
+    "acceptable_use": {
+      "version": "2026-07-26",
+      "url": "https://mandateshield.com/acceptable-use",
+      "source_sha256": "6ed8b42de72b392ad9ba9cd2f21854040ddadac2eca5581348e50829e249d860"
+    }
+  },
+  "evidence": {
+    "document_manifest_digest": "sha256:024c5731cb7941f836e92e6cdd244a53bc5b88facc7eebefb7530665532c6f55",
+    "operator_snapshot_digest": "sha256:a0773092755080788e403131334a60334b87aa6b4c657e9b72b6fd3c1f884243",
+    "combined_agreement_digest": "sha256:696a94d742ffb6ee55a1fca932cbcbe773b9706cd12a5bb0b1b48f5f0043fd30",
+    "clickwrap_recorded": true,
+    "recurring_subscription_consent_recorded": true,
+    "deployment_proof_private_completion_by_default": true,
+    "deployment_proof_fresh_finalize_publication_consent_recorded": true
+  },
+  "notices": {
+    "legal": "https://mandateshield.com/legal",
+    "security": "https://mandateshield.com/responsible-disclosure",
+    "status": "https://mandateshield.com/status",
+    "email": "support@hemelion.com"
+  },
+  "representations": {
+    "absolute_immunity_from_claims": false,
+    "regulatory_approval": false,
+    "third_party_certification": false,
+    "third_party_adoption": false
+  },
+  "updated_at": "2026-07-28T17:21:05.000Z"
+}

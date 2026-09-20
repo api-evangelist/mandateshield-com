@@ -1,0 +1,122 @@
+generated: '2026-09-19'
+method: searched
+probe: true
+source: https://mandateshield.com/trust
+signals:
+  sbom:
+    url: https://mandateshield.com/evidence/v1.13.0/sbom.spdx.json
+    format: SPDX
+    spdx_version: SPDX-2.3
+    package_count: 727
+    created: '2026-07-28T14:25:22.000Z'
+    scope: First-party inventory generated from the npm lockfile in the release source tree (creationInfo.comment);
+      covered by SHA256SUMS
+    evidence:
+    - source: https://mandateshield.com/evidence/release-integrity
+      http_status: 200
+      fetched: '2026-09-19'
+      keywords:
+      - SPDX 2.3 software bill of materials
+      - SHA-256 checksums
+    - source: https://mandateshield.com/evidence/v1.13.0/sbom.spdx.json
+      http_status: 200
+      fetched: '2026-09-19'
+      bytes: 528169
+  subprocessors:
+    url: https://mandateshield.com/subprocessors
+    processors:
+    - name: Cloudflare, Inc.
+      purpose: Application delivery, edge security and D1 database hosting
+    - name: OpenAI, L.L.C. and applicable affiliates
+      purpose: ChatGPT sign-in and hosted application distribution
+    other_recipients:
+    - Stripe group entities (checkout, subscriptions, invoices, tax)
+    - Customer-selected payment, RPC and provider endpoints
+    - GitHub, Inc. (optional Proof Network publication)
+    - IndexNow participating search engines
+    change_notice: Where practicable, this page will be updated before a new provider begins materially different
+      processing; Customer may object on reasonable data-protection grounds.
+    evidence:
+    - source: https://mandateshield.com/subprocessors
+      http_status: 200
+      fetched: '2026-09-19'
+      quote: Processors supporting MandateShield are separated from independent and customer-directed recipients.
+  incident_notification:
+    url: https://mandateshield.com/dpa
+    section: 5. Security incidents
+    stated_sla: without undue delay after becoming aware of a personal-data breach affecting Customer Personal Data
+    dpa_version: '2026-07-26'
+    evidence:
+    - source: https://mandateshield.com/dpa
+      http_status: 200
+      fetched: '2026-09-19'
+      quote: MandateShield will notify Customer without undue delay after becoming aware of a personal-data breach
+        affecting Customer Personal Data and provide information reasonably available for Customer's obligations.
+  data_subject_request:
+    url: https://mandateshield.com/privacy
+    section: Rights and self-service (Privacy Policy 2026-07-28.3)
+    channel: support@hemelion.com (controller contact) and in-product self-service
+    self_service:
+    - export active account data
+    - revoke credentials
+    - cancel billing
+    - delete the operational account
+    rights_named:
+    - withdraw consent
+    - complain to the competent supervisory authority
+    - access/correction/deletion via controller contact where self-service cannot complete
+    controller: Gökhan Vodinali, Bern, Switzerland
+    evidence:
+    - source: https://mandateshield.com/privacy
+      http_status: 200
+      fetched: '2026-09-19'
+      quote: Signed-in users can export active account data, revoke credentials, cancel billing and delete the operational
+        account without contacting support. Requests that cannot be completed self-service may be sent to the controller
+        contact above.
+  global_privacy_control:
+    honored: true
+    url: https://mandateshield.com/privacy
+    scope: optional activation analytics consent — "Global Privacy Control and Do Not Track always override a grant";
+      default state is denied
+    evidence:
+    - source: https://mandateshield.com/privacy
+      http_status: 200
+      fetched: '2026-09-19'
+      quote: 'Optional activation analytics: denied. Global Privacy Control and Do Not Track always override a grant.'
+    note: Set from the published statement only; no Sec-GPC header probe was used.
+considered_not_recorded:
+  support_lifetime: 'The only stated period is "Versioned documents: Immutable for one year" (current-release freshness
+    contract) — a document-availability commitment, not a product security-support period, so it is not recorded
+    as support_lifetime.'
+  exit_assistance: The privacy policy publishes self-service export of active account data and the DPA promises
+    return-or-delete, but no cloud-switching / exit-assistance documentation exists; recorded under data_subject_request
+    instead.
+  ai_transparency: Privacy §4 states MandateShield "does not take a decision that produces legal or similarly significant
+    effects for an individual" — an automated-decision statement, not an AI-interaction/AI-content transparency
+    notice.
+  accessibility_conformance: /accessibility 404; no VPAT or WCAG statement found.
+  data_residency: Subprocessor table names Cloudflare "configured service regions" and OpenAI "United States and
+    other documented service regions"; no residency commitment or region selector is published.
+  transparency_report: /api/v2/transparency/{receiptId} is a receipt-issuance transparency record, not a DSA/OSA
+    transparency report.
+  training_data_summary, age_assurance, notice_and_action: Not applicable and not published (business-only service,
+    age 18+ stated in privacy §8).
+probed_paths:
+- url: https://mandateshield.com/accessibility
+  status: 404
+- url: https://mandateshield.com/subprocessors
+  status: 200
+- url: https://mandateshield.com/dpa
+  status: 200
+- url: https://mandateshield.com/privacy
+  status: 200
+- url: https://mandateshield.com/trust
+  status: 200
+- url: https://mandateshield.com/security
+  status: 200
+- url: https://mandateshield.com/evidence/v1.13.0/sbom.spdx.json
+  status: 200
+- url: https://mandateshield.com/legal
+  status: 200
+- url: https://mandateshield.com/.well-known/legal.json
+  status: 200

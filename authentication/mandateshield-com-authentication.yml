@@ -1,0 +1,120 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/docs
+summary:
+  types:
+  - apiKey
+  - http
+  api_key_in:
+  - header
+  oauth2_flows: []
+  oauth: false
+  openid_connect: false
+  mutual_tls: false
+  model: Bearer API keys in two purpose-isolated roles (VERIFY and PROCESSOR), test/live split by key prefix, plus
+    a hosting-injected session assertion for the account control plane. No OAuth, no OIDC provider role, no scopes
+    surface.
+schemes:
+- name: hostingSession
+  type: apiKey
+  in: header
+  parameter: OAI-Authenticated-User-Email
+  description: Hosting-injected authenticated account-owner identity. The hosting boundary validates the user session
+    and injects this assertion; callers cannot authenticate by supplying this header directly. State-changing control-plane
+    requests additionally require the trusted same-origin check documented by the operation.
+  sources:
+  - openapi/mandateshield-com-openapi.yml
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: ms_test_… or ms_live_…
+  description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict
+    decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition
+    boundary.
+  sources:
+  - openapi/mandateshield-com-openapi.yml
+docs:
+- https://mandateshield.com/docs
+- https://mandateshield.com/developers
+- https://mandateshield.com/security
+derived_from: openapi/mandateshield-com-openapi.yml
+key_roles:
+- role: VERIFY
+  can:
+  - createVerificationChallenge
+  - verifyCryptographicAuthority
+  - verifyCryptographicAuthorityBatch
+  - verify_cryptographic_payment_authority (MCP)
+  - A2A strict skill
+  cannot:
+  - transition an execution authorization
+  - redeem a permit
+  placement: trusted server-side verification worker; may be passed to an MCP/A2A client only as a server-side Authorization
+    header
+- role: PROCESSOR
+  can:
+  - transitionExecutionAuthorization (CONSUME / COMMIT / RELEASE / EXPIRE)
+  - redeemExecutionPermit
+  - reportProviderSubmission
+  cannot:
+  - issue a challenge
+  - create an authorization
+  binding: bound at creation to one exact processor_audience; the signed receipt and expected_audience must match
+    it
+  placement: inside the trusted gateway; the redemption credential only inside the customer-deployed exclusive executor
+    with the provider credential — never the agent, model, browser, merchant page or verification worker
+key_prefixes:
+  test: ms_test_
+  live: ms_live_
+  note: From bearerFormat in the spec and the A2A card. Test keys persist up to 5,000 decisions per month and never
+    produce enforcement_authorized=true.
+header: 'Authorization: Bearer ms_live_...'
+anonymous_operations:
+- evaluatePurchase
+- evaluatePurchaseBatch
+- normalizeAgentPaymentProtocol
+- runStrictLifecycleSandbox
+- verifyDecisionReceipt
+- verifyExecutionPermit
+- verifyExecutionReceipt
+- getReceiptTransparency
+- listPublicProofAttestations
+- getPublicProofAttestation
+- getPublicProofBadge
+- createPublicProofChallenge
+- issuePublicProofAttestation
+- listDeploymentActivationProofs
+- getDeploymentActivationProof
+- getDeploymentActivationProofBadge
+- getThreatIntelligence
+optional_auth_operations:
+  note: security lists both bearerAuth and {} — anonymous calls use the rate-limited non-persisted sandbox and can
+    never reserve authority
+  operations:
+  - evaluatePurchase
+  - evaluatePurchaseBatch
+  - verifyCryptographicAuthority
+  - verifyCryptographicAuthorityBatch
+control_plane:
+  scheme: hostingSession
+  operations:
+  - getGlobalExecutionInterlock
+  - setGlobalExecutionInterlock
+  note: The OAI-Authenticated-User-Email header is injected by the hosting boundary after a "Sign in with ChatGPT"
+    session (dashboard redirects to auth.openai.com); callers cannot supply it. State changes also require a trusted
+    same-origin check.
+provider_webhook:
+  operation: receiveStripeProviderWebhook
+  auth: Stripe-Signature header verified against the connection's signing secret; the event is treated as a hint,
+    never terminal proof
+key_management:
+  where: https://mandateshield.com/dashboard
+  trust_anchors: Authority-issuer public JWKs are pinned per account with issuer, audience, protocol and RFC 7638
+    thumbprint; a JWK supplied in a request verifies signature math but establishes no trust. Private keys are rejected.
+    Mandates and keys can be revoked independently.
+  replay_boundary: account-wide idempotency tombstones survive API-key rotation
+agent_surfaces:
+  mcp: 'https://mandateshield.com/api/mcp — anonymous initialize/tools/list; optional Bearer VERIFY key for the
+    strict tool (server.json: Authorization isRequired false)'
+  a2a: securitySchemes.bearerAuth httpAuthSecurityScheme Bearer, ms_test_... or ms_live_...
+  oauth_discovery: /.well-known/oauth-authorization-server and /.well-known/oauth-protected-resource both 404 (well-known/)

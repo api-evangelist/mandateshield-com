@@ -1,0 +1,163 @@
+generated: '2026-09-19'
+method: probed
+source: https://mandateshield.com/.well-known/agent-card.json
+card:
+  file: a2a/mandateshield-com-agent-card.json
+discovery:
+  path: /.well-known/agent-card.json
+  canonical: true
+  host: mandateshield.com
+  note: 'Served from the apex host, which is also the API, MCP and A2A host. The legacy /.well-known/agent.json
+    404s. Ownership is not in question: provider.organization is "MandateShield", provider.url is https://mandateshield.com,
+    the interfaces point at https://mandateshield.com/a2a, and the provider''s own ai-catalog.json, server.json
+    and agent-payment-authority.json all name this exact URL as the A2A agent card. Third-party directory: https://a2aregistry.org/agents/d6b1f111-31ce-4e9f-88f2-05b973cc20f8/
+    (linked from the provider''s /trust page; not probed).'
+conformance:
+  spec: A2A 1.0.0
+  grade: flavored
+  protocol_version: null
+  preferred_transport: null
+  deviations:
+  - no-top-level-protocolVersion
+  - no-top-level-url
+  - supportedInterfaces-instead-of-additionalInterfaces
+  - no-preferredTransport
+  passes:
+  - capabilities-is-object
+  - skills-is-array
+  - defaultInputModes-present
+  - defaultOutputModes-present
+  - provider-present
+  - version-present
+  - securitySchemes-present
+  - signatures-present
+  note: 'Graded against the rubric''s hard checks (capabilities object + top-level protocolVersion + skills array):
+    the card has no top-level protocolVersion or url and uses supportedInterfaces, so it grades flavored. The card
+    is internally consistent: each of its two supportedInterfaces entries carries its own protocolBinding JSONRPC
+    and protocolVersion ("1.0" and "0.3"), and the extension params document version isolation (A2A-Version header
+    selects the profile; an absent header means 0.3). It also carries a "signatures" array (JWS-signed card). A
+    re-grade under a rubric that reads supportedInterfaces[].protocolVersion would change this verdict; the deviations
+    list is recorded so that is mechanical.'
+agent_card:
+  name: MandateShield Payment Authority Agent
+  description: Provides strict cryptographic reservation of AI-agent payment authority and a separate non-executable
+    policy-analysis path. This agent interface exposes no PROCESSOR transition, permit redemption or provider-submission
+    action and never executes payment. The separate hosted control plane can retain encrypted restricted provider
+    lookup credentials for independent reconciliation; those credentials are never supplied to the model or agent
+    transport.
+  version: 1.13.0
+  documentation_url: https://mandateshield.com/developers
+  provider:
+    organization: MandateShield
+    url: https://mandateshield.com
+  supported_interfaces:
+  - url: https://mandateshield.com/a2a
+    protocol_binding: JSONRPC
+    protocol_version: '1.0'
+  - url: https://mandateshield.com/a2a
+    protocol_binding: JSONRPC
+    protocol_version: '0.3'
+  capabilities:
+    streaming: false
+    push_notifications: false
+    extended_agent_card: false
+    extensions:
+    - https://mandateshield.com/specifications/agent-card-extension/v1
+  default_input_modes:
+  - application/json
+  - text/plain
+  default_output_modes:
+  - application/json
+  - text/plain
+  security_schemes:
+    bearerAuth:
+      type: httpAuthSecurityScheme
+      scheme: Bearer
+      bearer_format: ms_test_... or ms_live_...
+      description: Server-side VERIFY-scoped MandateShield API key. Never provide a PROCESSOR key to an agent or
+        A2A client.
+  skills:
+  - id: normalize-agent-payment-protocol
+    name: Project Agent Payment Fields
+    tags:
+    - AP2
+    - x402 v2
+    - MPP
+    - payment protocol adapter
+    - purchase envelope
+    input_modes:
+    - application/json
+    - text/plain
+    output_modes:
+    - application/json
+    - text/plain
+  - id: verify-cryptographic-payment-authority
+    name: Verify Cryptographic Payment Authority
+    tags:
+    - cryptographic authorization
+    - signed mandate
+    - SD-JWT
+    - RFC 9421
+    - AP2
+    - TAP
+    - decision receipt
+    - account-pinned key
+    - one-time challenge
+    - cumulative budget reservation
+    - processor handoff
+    - provider-bound execution permit
+    - atomic online redemption
+    - provider reconciliation
+    - independent provider evidence
+    - signed execution receipt
+    input_modes:
+    - application/json
+    output_modes:
+    - application/json
+  - id: check-ai-payment-authority
+    name: Analyze AI Payment Policy
+    tags:
+    - agentic commerce
+    - AI payments
+    - payment authorization
+    - AP2
+    - UCP
+    - TAP
+    - x402
+    - ACP
+    input_modes:
+    - application/json
+    - text/plain
+    output_modes:
+    - application/json
+    - text/plain
+  skill_count: 3
+  signed: true
+execution_boundary: The card states the A2A interface exposes no PROCESSOR transition, permit redemption or provider-submission
+  action and never executes payment; the same three capabilities are exposed over MCP (see mcp/mandateshield-com-mcp.yml).
+  The corresponding HTTP operations are createVerificationChallenge, verifyCryptographicAuthority, verifyCryptographicAuthorityBatch,
+  normalizeAgentPaymentProtocol and evaluatePurchase in openapi/mandateshield-com-openapi.yml.
+x-evidence:
+  fetched: '2026-09-19'
+  url: https://mandateshield.com/.well-known/agent-card.json
+  http_status: 200
+  content_type: application/a2a+json; charset=utf-8
+  body_bytes: 12309
+  body_parses_as: JSON object with AgentCard shape (name, description, version, provider, capabilities object, skills
+    array of 3, securitySchemes, signatures)
+  corroborating_probes:
+  - url: https://mandateshield.com/.well-known/agent.json
+    http_status: 404
+  - url: https://mandateshield.com/a2a
+    http_status: 405
+    note: GET on the declared JSONRPC interface returns 405 Method Not Allowed; the endpoint exists and expects
+      the POST the card declares.
+  - url: https://mandateshield.com/.well-known/ai-catalog.json
+    http_status: 200
+    note: Lists the card as an entry of the provider's AI capability catalog.
+  - url: https://mandateshield.com/.well-known/agent-payment-authority.json
+    http_status: 200
+    note: interfaces.a2a.agent_card names this exact URL; interfaces.a2a.endpoint is https://mandateshield.com/a2a.
+  - url: https://mandateshield.com/.well-known/mandateshield-com-negative-control-9c41f7ab.json
+    http_status: 404
+    note: Negative control passed.

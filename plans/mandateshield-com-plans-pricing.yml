@@ -1,0 +1,135 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/pricing
+plan_count: 4
+currency: USD
+model: Monthly business subscription with included decision volume and per-decision overage; billed through Stripe
+  Checkout; automatic monthly renewal, online cancellation; business use only (terms)
+decision_definition: One new authenticated verification or analysis decision that is persisted. An exact-input network
+  retry is not a second decision; permit claiming and receipt verification never add a second decision charge (pricing
+  page).
+plans:
+- id: starter
+  name: Starter
+  price: 99.0
+  currency: USD
+  period: month
+  included_quota:
+    decisions: 50000
+    unit: persisted authenticated verification or analysis decisions per month
+  effective_rate_per_1000_included: $1.98
+  overage:
+    per_additional_decision: 0.02
+    currency: USD
+  limits:
+    evidence_retention_days: 30
+    live_keys: 5
+    batch_size_max: 25
+  fit: One agent or a new merchant integration
+  features:
+  - Lifetime, UTC-day and UTC-month budgets
+  - Account-owned shared budgets across attached mandates
+  - Reserve, consume, commit or release lifecycle
+  - Provider-bound one-use execution permits
+  - Atomic redemption before provider submission
+  - Hosted Stripe API and x402 chain reconciliation
+  - Signed, public-key-verifiable terminal receipts
+  - Batch evaluation, MCP and A2A access
+  - Compatible protocol updates; breaking changes are versioned
+  - Cancel online at any time
+- id: growth
+  name: Growth
+  price: 499.0
+  currency: USD
+  period: month
+  included_quota:
+    decisions: 500000
+    unit: persisted authenticated verification or analysis decisions per month
+  effective_rate_per_1000_included: $1.00
+  overage:
+    per_additional_decision: 0.01
+    currency: USD
+  limits:
+    evidence_retention_days: 60
+    live_keys: 10
+    batch_size_max: 25
+  fit: Production merchants and payment platforms (marked Most popular)
+  features:
+  - Lifetime, UTC-day and UTC-month budgets
+  - Account-owned shared budgets across attached mandates
+  - Reserve, consume, commit or release lifecycle
+  - Provider-bound one-use execution permits
+  - Atomic redemption before provider submission
+  - Hosted Stripe API and x402 chain reconciliation
+  - Signed, public-key-verifiable terminal receipts
+  - Batch evaluation, MCP and A2A access
+  - Compatible protocol updates; breaking changes are versioned
+  - Cancel online at any time
+- id: scale
+  name: Scale
+  price: 1999.0
+  currency: USD
+  period: month
+  included_quota:
+    decisions: 5000000
+    unit: persisted authenticated verification or analysis decisions per month
+  effective_rate_per_1000_included: $0.40
+  overage:
+    per_additional_decision: 0.007
+    currency: USD
+  limits:
+    evidence_retention_days: 90
+    live_keys: 20
+    batch_size_max: 25
+  fit: High-volume marketplaces and agent networks
+  features:
+  - Lifetime, UTC-day and UTC-month budgets
+  - Account-owned shared budgets across attached mandates
+  - Reserve, consume, commit or release lifecycle
+  - Provider-bound one-use execution permits
+  - Atomic redemption before provider submission
+  - Hosted Stripe API and x402 chain reconciliation
+  - Signed, public-key-verifiable terminal receipts
+  - Batch evaluation, MCP and A2A access
+  - Compatible protocol updates; breaking changes are versioned
+  - Cancel online at any time
+- id: machine
+  name: Machine
+  price: 4999.0
+  currency: USD
+  period: month
+  included_quota:
+    decisions: 50000000
+    unit: persisted authenticated verification or analysis decisions per month
+  effective_rate_per_1000_included: $0.10
+  overage:
+    per_additional_decision: 0.0001
+    currency: USD
+  limits:
+    evidence_retention_days: 30
+    live_keys: 50
+    batch_size_max: 25
+  fit: Autonomous agents, x402 services and machine-to-machine commerce; flat $0.10 per 1,000 decisions at full
+    included volume and for every additional decision
+  features:
+  - Lifetime, UTC-day and UTC-month budgets
+  - Account-owned shared budgets across attached mandates
+  - Reserve, consume, commit or release lifecycle
+  - Provider-bound one-use execution permits
+  - Atomic redemption before provider submission
+  - Hosted Stripe API and x402 chain reconciliation
+  - Signed, public-key-verifiable terminal receipts
+  - Batch evaluation, MCP and A2A access
+  - Compatible protocol updates; breaking changes are versioned
+  - Cancel online at any time
+free_tier:
+  no_account_sandbox: 200 mandate validations per day, no account, non-persisted, no execution authority
+  test_key: up to 5,000 persisted decisions per month after sign-in
+  zero_account_lifecycle_sandbox: POST /api/v2/sandbox/lifecycle, unlimited by plan (rate-limited)
+  guided_private_pilot: $0, no card
+sla: Public plans do not include a contractual uptime SLA or automatic service credits; a separate written order
+  must state any enterprise SLA (status page and terms §6).
+enterprise: No separate enterprise tier is listed; enterprise SLA only by written order.
+note: Every published price, quota, overage, retention window and key count above was read verbatim from /pricing
+  on 2026-09-19. The pricing page also carries a cost-per-decision calculator that the provider states is not a
+  loss estimate, ROI claim or promise of savings.

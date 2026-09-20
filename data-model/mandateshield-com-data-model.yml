@@ -1,0 +1,396 @@
+generated: '2026-09-19'
+method: derived
+source: openapi/_original/mandateshield-com-openapi.json
+docs: https://mandateshield.com/docs
+summary: 'The data core is a decision-and-evidence chain, not a CRUD object graph: a PurchaseEnvelope (bound to
+  a registered mandate, agent and merchant) is verified against a one-time Challenge into a StrictDecision whose
+  SignedDecisionReceipt is the execution-authorization token; a PROCESSOR-side transition consumes it into a SignedExecutionPermit
+  and ProviderSubmissionRecord; redemption, provider evidence and reconciliation close the chain with a SignedExecutionReceipt.
+  Mandates and API keys are control-plane objects managed in the dashboard and are referenced by id only — the contract
+  has no mandate or key CRUD.'
+entity_count: 77
+entities:
+- AnalysisDecision
+- Challenge
+- ChallengeRequest
+- CryptographicEvidence
+- DeploymentActivationAssurance
+- DeploymentActivationBadge
+- DeploymentActivationBinding
+- DeploymentActivationEligibility
+- DeploymentActivationObservation
+- DeploymentActivationProof
+- DeploymentActivationProofList
+- DeploymentActivationProofSummary
+- DeploymentActivationSubject
+- Error
+- EvidenceAssurance
+- ExecutionAmountBinding
+- ExecutionAuthorizationReservation
+- ExecutionAuthorizationState
+- ExecutionAuthorizationTransitionRequest
+- ExecutionAuthorizationTransitionResult
+- ExecutionExpectedRequest
+- ExecutionInterlockMutation
+- ExecutionInterlockMutationStatus
+- ExecutionInterlockStatus
+- ExecutionPayeeBinding
+- ExecutionPermitClaims
+- ExecutionPermitProtectedHeader
+- ExecutionPermitRedemptionRequest
+- ExecutionPermitRedemptionResult
+- ExecutionPermitVerification
+- ExecutionPermitVerificationRequest
+- ExecutionProviderBinding
+- ExecutionReceiptClaims
+- ExecutionReceiptProtectedHeader
+- ExecutionReceiptVerification
+- ExecutionReceiptVerificationRequest
+- ExecutionResourceBinding
+- Finding
+- HttpSignatureInput
+- LegalAcceptanceRequiredError
+- MandateBinding
+- PreflightDecision
+- ProcessorResult
+- ProtocolAdapterResult
+- ProviderBindingInput
+- ProviderEvidenceClass
+- ProviderEvidenceId
+- ProviderEvidenceRecord
+- ProviderSubmissionId
+- ProviderSubmissionRecord
+- ProviderSubmissionReportRequest
+- ProviderSubmissionReportResult
+- ProviderSubmissionState
+- PublicProofAttestation
+- PublicProofAttestationRequest
+- PublicProofChallenge
+- PublicProofChallengeRequest
+- PublicProofConformanceReport
+- PublicProofNetworkList
+- PublicProofSubjectInput
+- PublicProofSummary
+- PublicVerificationJwk
+- PublisherTermsRequiredError
+- PurchaseEnvelope
+- ReceiptVerification
+- ReconciliationRecord
+- Risk
+- SignedDecisionReceipt
+- SignedExecutionPermit
+- SignedExecutionReceipt
+- StrictBatchResponse
+- StrictDecision
+- StrictLifecycleSandboxRequest
+- StrictLifecycleSandboxResult
+- StrictVerificationInput
+- TransparencyRecord
+- TransparencyStatus
+core_chain:
+- PurchaseEnvelope
+- Challenge
+- StrictDecision
+- SignedDecisionReceipt
+- TransparencyRecord
+- ExecutionAuthorizationReservation
+- ExecutionAuthorizationTransitionResult
+- SignedExecutionPermit
+- ProviderSubmissionRecord
+- ExecutionPermitRedemptionResult
+- ProviderEvidenceRecord
+- ReconciliationRecord
+- SignedExecutionReceipt
+state_machine:
+  entity: ExecutionAuthorizationState
+  states:
+  - RESERVED
+  - CONSUMED
+  - COMMITTED
+  - RELEASED
+  - EXPIRED
+  - SETTLEMENT_UNKNOWN
+  - NOT_RESERVED
+  - ARCHIVAL_ONLY
+  transitions:
+    verify (ALLOW, live, pinned): -> RESERVED
+    CONSUME: RESERVED -> CONSUMED (issues permit + prepared ProviderSubmission)
+    COMMIT: CONSUMED -> COMMITTED
+    RELEASE: RESERVED|CONSUMED -> RELEASED
+    EXPIRE / expires_at: RESERVED -> EXPIRED
+    unresolved after settlement deadline: CONSUMED -> SETTLEMENT_UNKNOWN (charged conservatively, never auto-released)
+  transition_operation: transitionExecutionAuthorization
+id_prefixes:
+  msr_: decision receipt_id (^msr_[a-f0-9]{32}$, from the CLI)
+  msp_: execution permit_id (^msp_[a-f0-9]{32}$)
+  mnd_: mandate_id in docs examples (e.g. mnd_2048) — convention, not enforced by the schema
+  ms_test_ / ms_live_: API keys (VERIFY or PROCESSOR role)
+  'sha256:': mandate_hash, receipt hash and intent digests
+reference_fields:
+- field: agent_id
+  appears_in:
+  - PurchaseEnvelope
+- field: asset_id
+  appears_in:
+  - PurchaseEnvelope
+- field: challenge_id
+  appears_in:
+  - PublicProofChallenge
+- field: claim_id
+  appears_in:
+  - ProviderSubmissionReportRequest
+  - ExecutionPermitRedemptionResult
+- field: evidence_id
+  appears_in:
+  - ProviderSubmissionReportResult
+- field: execution_receipt_id
+  appears_in:
+  - SignedExecutionReceipt
+- field: key_id
+  appears_in:
+  - SignedExecutionPermit
+  - SignedExecutionReceipt
+  - EvidenceAssurance
+  - SignedDecisionReceipt
+  - TransparencyRecord
+- field: last_event_id
+  appears_in:
+  - ExecutionInterlockStatus
+  - ExecutionInterlockMutationStatus
+- field: mandate_id
+  appears_in:
+  - ChallengeRequest
+  - Challenge
+  - PurchaseEnvelope
+- field: merchant_id
+  appears_in:
+  - PurchaseEnvelope
+  - ExecutionPayeeBinding
+- field: permit_id
+  appears_in:
+  - ProviderSubmissionReportRequest
+  - ProviderSubmissionReportResult
+  - SignedExecutionPermit
+  - ExecutionPermitRedemptionResult
+- field: proof_id
+  appears_in:
+  - PublicProofAttestation
+  - PublicProofSummary
+  - DeploymentActivationProofSummary
+  - DeploymentActivationProof
+- field: provider_evidence_id
+  appears_in:
+  - ExecutionAuthorizationTransitionRequest
+  - ExecutionAuthorizationTransitionResult
+- field: provider_submission_id
+  appears_in:
+  - ProviderSubmissionReportRequest
+  - ProviderSubmissionReportResult
+  - ExecutionAuthorizationTransitionResult
+  - ExecutionPermitRedemptionResult
+- field: receipt_id
+  appears_in:
+  - ExecutionAuthorizationTransitionResult
+  - SignedDecisionReceipt
+  - TransparencyRecord
+- field: request_id
+  appears_in:
+  - ProviderBindingInput
+  - ExecutionProviderBinding
+- field: run_id
+  appears_in:
+  - StrictLifecycleSandboxResult
+relationships:
+- from: PublicProofChallengeRequest
+  to: PublicProofSubjectInput
+  kind: has_one
+  via: subject
+- from: PublicProofChallengeRequest
+  to: PublicProofConformanceReport
+  kind: has_one
+  via: report
+- from: PublicProofNetworkList
+  to: PublicProofSummary
+  kind: has_many
+  via: proofs
+- from: DeploymentActivationProofSummary
+  to: DeploymentActivationSubject
+  kind: has_one
+  via: subject
+- from: DeploymentActivationProofSummary
+  to: DeploymentActivationBinding
+  kind: has_one
+  via: binding
+- from: DeploymentActivationProofSummary
+  to: DeploymentActivationObservation
+  kind: has_one
+  via: activation
+- from: DeploymentActivationProofSummary
+  to: DeploymentActivationEligibility
+  kind: has_one
+  via: eligibility
+- from: DeploymentActivationProofSummary
+  to: DeploymentActivationAssurance
+  kind: has_one
+  via: assurance
+- from: DeploymentActivationProofSummary
+  to: DeploymentActivationBadge
+  kind: has_one
+  via: badge
+- from: DeploymentActivationProof
+  to: DeploymentActivationSubject
+  kind: has_one
+  via: subject
+- from: DeploymentActivationProof
+  to: DeploymentActivationBinding
+  kind: has_one
+  via: binding
+- from: DeploymentActivationProof
+  to: DeploymentActivationObservation
+  kind: has_one
+  via: activation
+- from: DeploymentActivationProof
+  to: DeploymentActivationEligibility
+  kind: has_one
+  via: eligibility
+- from: DeploymentActivationProof
+  to: DeploymentActivationAssurance
+  kind: has_one
+  via: assurance
+- from: DeploymentActivationProof
+  to: DeploymentActivationBadge
+  kind: has_one
+  via: badge
+- from: DeploymentActivationProofList
+  to: DeploymentActivationProofSummary
+  kind: has_many
+  via: proofs
+- from: ProtocolAdapterResult
+  to: PurchaseEnvelope
+  kind: has_one
+  via: envelope
+- from: CryptographicEvidence
+  to: PublicVerificationJwk
+  kind: has_one
+  via: public_key
+- from: CryptographicEvidence
+  to: HttpSignatureInput
+  kind: has_one
+  via: signature_input
+- from: StrictVerificationInput
+  to: PurchaseEnvelope
+  kind: has_one
+  via: envelope
+- from: StrictVerificationInput
+  to: CryptographicEvidence
+  kind: has_one
+  via: evidence
+- from: ExecutionExpectedRequest
+  to: ExecutionProviderBinding
+  kind: has_one
+  via: provider
+- from: ExecutionExpectedRequest
+  to: ExecutionPayeeBinding
+  kind: has_one
+  via: payee
+- from: ExecutionExpectedRequest
+  to: ExecutionAmountBinding
+  kind: has_one
+  via: amount
+- from: ExecutionExpectedRequest
+  to: ExecutionResourceBinding
+  kind: has_one
+  via: resource
+- from: ProviderSubmissionReportRequest
+  to: ProviderSubmissionId
+  kind: has_one
+  via: provider_submission_id
+- from: ProviderSubmissionReportResult
+  to: ProviderSubmissionId
+  kind: has_one
+  via: provider_submission_id
+- from: ProviderSubmissionReportResult
+  to: ProviderSubmissionState
+  kind: has_one
+  via: state
+- from: ProviderSubmissionReportResult
+  to: ProviderEvidenceClass
+  kind: has_one
+  via: evidence_class
+- from: ProviderSubmissionReportResult
+  to: ProviderEvidenceId
+  kind: has_one
+  via: evidence_id
+- from: ExecutionAuthorizationTransitionRequest
+  to: PurchaseEnvelope
+  kind: has_one
+  via: expected_envelope
+- from: ExecutionAuthorizationTransitionRequest
+  to: ProcessorResult
+  kind: has_one
+  via: processor_result
+- from: ExecutionAuthorizationTransitionRequest
+  to: ProviderEvidenceId
+  kind: has_one
+  via: provider_evidence_id
+- from: ExecutionAuthorizationTransitionRequest
+  to: ProviderBindingInput
+  kind: has_one
+  via: provider_binding
+- from: ExecutionAuthorizationTransitionResult
+  to: ExecutionAuthorizationState
+  kind: has_one
+  via: transition_state
+- from: ExecutionAuthorizationTransitionResult
+  to: ExecutionAuthorizationState
+  kind: has_one
+  via: current_state
+- from: SignedExecutionReceipt
+  to: ProviderEvidenceClass
+  kind: has_one
+  via: evidence_class
+- from: ExecutionPermitVerification
+  to: ExecutionPermitProtectedHeader
+  kind: has_one
+  via: protected_header
+- from: ExecutionPermitVerification
+  to: ExecutionPermitClaims
+  kind: has_one
+  via: claims
+- from: ExecutionPermitRedemptionRequest
+  to: ExecutionExpectedRequest
+  kind: has_one
+  via: expected_request
+- from: ExecutionPermitRedemptionResult
+  to: ProviderSubmissionId
+  kind: has_one
+  via: provider_submission_id
+- from: ExecutionReceiptVerification
+  to: ExecutionReceiptProtectedHeader
+  kind: has_one
+  via: protected_header
+- from: ExecutionReceiptVerification
+  to: ExecutionReceiptClaims
+  kind: has_one
+  via: claims
+- from: ExecutionAuthorizationReservation
+  to: ExecutionAuthorizationState
+  kind: has_one
+  via: state
+- from: PreflightDecision
+  to: Finding
+  kind: has_many
+  via: findings
+- from: PreflightDecision
+  to: Risk
+  kind: has_one
+  via: risk
+- from: EvidenceAssurance
+  to: Finding
+  kind: has_many
+  via: findings
+not_modelled_in_contract:
+- Mandate (registered in the dashboard; referenced by mandate_id/mandate_version/mandate_hash)
+- API key / key pin (thumbprint, issuer, audience, protocol)
+- Account and billing objects (Stripe-managed)
+render: null

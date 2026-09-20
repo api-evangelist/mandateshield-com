@@ -1,0 +1,92 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/sdk/v1.13.0/mandateshield-cli.mjs
+docs: https://mandateshield.com/developers
+description: The standalone MandateShield CLI — a single ESM file with no third-party dependencies, Node.js 18+.
+  Captured verbatim from the usage text embedded in the v1.13.0 file (sha256 ef6cb1e88b41fbca36671986ba7c9d3a523c31d7d68b623f3befd98dbdf3c673).
+  The binary itself is catalogued in packages/mandateshield-com-packages.yml; this artifact is its command surface.
+version: 1.13.0
+runtime: Node.js 18+
+install:
+  download: curl -fsSLo mandateshield-cli.mjs https://mandateshield.com/sdk/v1.13.0/mandateshield-cli.mjs
+  run: node mandateshield-cli.mjs [options] <command> [input.json|-]
+  verify: shasum -a 256 -c SHA256SUMS (https://mandateshield.com/sdk/v1.13.0/SHA256SUMS)
+defaults:
+  base_url: https://mandateshield.com
+  timeout_ms: 10000
+  mcp_protocol_version: '2025-11-25'
+commands:
+  offline:
+  - name: doctor
+    description: Assess v2 mandatory-path deployment evidence offline; JSON to stdout, no API key or network.
+  analysis_only_v1:
+  - name: preflight
+    description: Send one normalized purchase envelope to POST /api/v1/preflight.
+    operation: evaluatePurchase
+  - name: batch
+    description: Send 1-25 envelopes to POST /api/v1/batch.
+    operation: evaluatePurchaseBatch
+  strict_v2:
+  - name: challenge
+    description: Issue a one-time production challenge for a mandate.
+    operation: createVerificationChallenge
+  - name: verify
+    description: Send {envelope, evidence} to strict v2.
+    operation: verifyCryptographicAuthority
+  - name: verify-batch
+    description: Send 1-25 strict v2 verification inputs.
+    operation: verifyCryptographicAuthorityBatch
+  - name: normalize
+    description: Normalize AP2, x402 v2 or MPP protocol syntax; output is never an execution authorization.
+    operation: normalizeAgentPaymentProtocol
+  execution_lifecycle:
+  - name: transition
+    description: With a PROCESSOR key, atomically CONSUME, COMMIT, RELEASE or EXPIRE a reserved execution authorization.
+    operation: transitionExecutionAuthorization
+  - name: permit-verify
+    description: Verify a signed execution permit and exact audience; advisory, never unlocks provider submission.
+    operation: verifyExecutionPermit
+  - name: permit-redeem
+    description: With a PROCESSOR key, atomically claim one exact provider-bound permit; only a fresh claim exits
+      0.
+    operation: redeemExecutionPermit
+  evidence:
+  - name: receipt
+    description: Verify a decision receipt against expected_envelope and expected_audience; context is required
+      for exit 0.
+    operation: verifyDecisionReceipt
+  - name: execution-receipt
+    description: Verify a terminal historical execution receipt; never grants execution authority.
+    operation: verifyExecutionReceipt
+  - name: threat-intelligence
+    description: Read the public privacy-thresholded aggregate feed.
+    operation: getThreatIntelligence
+  agent_surfaces:
+  - name: mcp-tools
+    description: List tools from the remote MCP server.
+  - name: mcp-call <tool-name>
+    description: Call an MCP tool with the input object as arguments.
+  - name: a2a
+    description: Send the input object as structured A2A message data.
+  - name: agent-card
+    description: Read the public A2A agent card.
+options:
+- flag: --base-url <url>
+  description: Override the API origin (HTTPS, or HTTP on localhost).
+- flag: --timeout <ms>
+  description: Request timeout (default 10000).
+- flag: --help
+- flag: --version
+environment:
+- name: MANDATESHIELD_API_KEY
+  description: Optional Bearer key. Without it, supported calls use the rate-limited, non-persisted sandbox.
+- name: MANDATESHIELD_BASE_URL
+- name: MANDATESHIELD_TIMEOUT_MS
+exit_status:
+  '0': Doctor established production readiness, or a request succeeded and any decision was reserved for live enforcement,
+    or a processor transition completed, or a fresh provider-bound permit claim was granted.
+key_flows:
+- 'Zero-account trial: run preflight/normalize with no MANDATESHIELD_API_KEY against the anonymous sandbox.'
+- 'Production lifecycle: challenge -> verify -> transition CONSUME (PROCESSOR key) -> permit-verify -> permit-redeem
+  -> execution-receipt.'
+- 'Agent connectivity check: mcp-tools then mcp-call check_ai_payment_authority.'

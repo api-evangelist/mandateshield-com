@@ -1,0 +1,251 @@
+# MandateShield
+
+Current product release: v1.13.0
+Current OpenAPI contract: v3.4.0
+Current boundary specification: v2.4.0
+Released and generated: 2026-07-28T14:25:22.000Z
+Authoritative current-release pointer: https://mandateshield.com/current-release.json
+Immutable OpenAPI: https://mandateshield.com/openapi/3.4.0.json
+Immutable AI index: https://mandateshield.com/llms/1.13.0.txt
+Immutable full AI context: https://mandateshield.com/llms-full/1.13.0.txt
+Immutable discovery manifest: https://mandateshield.com/discovery/1.13.0.json
+Agent payment authority discovery: https://mandateshield.com/.well-known/agent-payment-authority.json
+
+> MandateShield is a pre-payment authority-reservation and provider-evidence boundary for autonomous AI-agent purchases on two terminal outcome profiles: configured Stripe PaymentIntents and supported x402 EIP-3009 transfers. Product v1.7 adds durable ProviderSubmission, ProviderEvidence and ReconciliationRecord state, encrypted restricted provider lookup connections, Stripe API or canonical-chain checks that do not trust the caller's asserted outcome, autonomous terminal budget finalization and signed terminal execution receipts. The hosted service does not process payments or receive card numbers, bank credentials or private keys.
+<!-- mandateshield:mutable-evaluation:start -->
+
+## Current evaluation and safe next step
+
+Current public evidence is technically substantial but does not establish an independent audit, an externally controlled production installation, customers or revenue. The machine-readable disposition is BOUNDED_PILOT_RECOMMENDED.
+
+Run the $0 bounded pilot at https://mandateshield.com/launch to evaluate the product. It requires an account, accepted terms and control of an external HTTPS domain or public GitHub repository, but no payment card or production payment credential. The official runner contains no payment-provider client. MandateShield observes one strict reservation and one fresh credential-bound permit redemption; it observes no provider submission, provider enforcement, terminal provider evidence or payment execution and does not observe out-of-band activity. A successful run completes privately and publishes no record. Public proof is optional after private completion and requires a separate fresh finalization with publication_consent=true; omitting or declining that consent leaves the completion private. Neither private completion nor an optional published record establishes an independent audit, customer status, revenue, a production deployment, provider enforcement, terminal provider evidence or payment execution.
+
+Machine evaluation contract: https://mandateshield.com/.well-known/mandateshield-evaluation.json
+Zero-account test-only alternative: https://mandateshield.com/sandbox
+<!-- mandateshield:mutable-evaluation:end -->
+
+## Critical execution rule
+
+Machine discovery for the canonical new-account lifecycle `resolve_authority → reserve → consume → redeem_once → verify_outcome → retain_proof`, its exact pre-cutoff legacy compatibility boundary, HTTP/OpenAPI interfaces, MCP/A2A authority-check and strict-reservation surfaces, signed receipts and the account emergency interlock is published at https://mandateshield.com/.well-known/agent-payment-authority.json. MCP/A2A expose no PROCESSOR transition, permit redemption, provider submission or payment execution. The lifecycle is provider-profile-independent only as a state contract; terminal outcome checking currently supports configured Stripe PaymentIntents and the documented x402 EIP-3009 profile. The canonical order is required for accounts created at or after 2026-07-26T12:01:24.000Z and for missing or malformed account-creation evidence, and recommended for every integration. Only accounts created before that cutoff retain the non-recommended legacy unbound CONSUME path, which may return direct permission without `redeem_once`; callers must not infer legacy eligibility. It is a MandateShield-published discovery profile, not an accredited industry standard, independent certification, evidence of external-agent or provider adoption, or provider enforcement.
+Account-owner emergency interlock: GET or POST https://mandateshield.com/api/account/execution-interlock
+Interlock contract: https://mandateshield.com/specifications/global-execution-interlock/v1
+
+POST https://mandateshield.com/api/v2/verify, including through its strict MCP/A2A authority-check wrapper, can create a short execution reservation only when every condition is true. MCP/A2A still expose no processor transition, redemption, provider submission or payment execution:
+
+- decision is ALLOW
+- enforcement_authorized is true
+- mode is live
+- persisted is true
+- assurance.authority_valid is true
+- assurance.key_trust is ACCOUNT_PINNED
+- execution_authorization.state is RESERVED
+- execution_authorization.consumable is true
+
+Never submit payment directly from this response. The recommended v1.7 sequence is VERIFY → CONSUME with provider_binding → ProviderSubmission plus signed Execution Permit → audience-bound online redemption → the exclusive executor makes one idempotent provider operation with the signed key → report the stable provider submission and payment reference → MandateShield checks the configured provider API or canonical chain without trusting the caller assertion → autonomous COMMIT or RELEASE → signed Execution Receipt.
+
+Provider-binding account policy: provider_binding is mandatory for every CONSUME on an account created at or after 2026-07-26T12:01:24.000Z. Only accounts created before that cutoff retain legacy unbound CONSUME compatibility. A missing or malformed account creation timestamp fails closed as a new account. Integrations must default to the provider-bound path and must not probe or infer legacy eligibility.
+
+Provider-bound CONSUME moves RESERVED to CONSUMED, creates one durable ProviderSubmission record and issues the permit, but returns provider_submission_permitted=false and provider_redemption_required=true. It does not authorize the customer, agent or merchant to call the provider. The ES256 MSP+JWT permit lives for at most 60 seconds and binds the exact audience, provider account/request, payee, amount, resource and MandateShield-generated provider idempotency key.
+
+Local JWKS verification and POST /api/v2/execution-permits/verify are advisory only: online_state=UNKNOWN, one_use_enforced=false and provider_submission_permitted=false. Offline verification never grants. An execution service holding a live PROCESSOR credential for the exact signed audience must POST the complete permit and exact provider/payee/amount/resource bindings to /api/v2/execution-permits/redeem. Only the first response with provider_submission_permitted=true, status=CLAIMED and idempotent_replay=false grants MandateShield authority for one operation. The exclusive executor must still make one idempotent provider operation, use the returned provider_idempotency_key and retain the returned provider_submission_id. An exact retry returns false; a conflicting replay returns HTTP 409.
+
+POST /api/v2/provider-submissions records the PROCESSOR caller's outcome and provider observation only as CALLER_ASSERTED evidence. A signed Stripe webhook is also a hint, not terminal proof. MandateShield then retrieves the exact bound Stripe PaymentIntent through the account's encrypted restricted-key connection or verifies the exact x402 transaction, transfer and canonical confirmation depth. Only matching PROVIDER_API_VERIFIED or CHAIN_FINALIZED evidence checked without trusting the caller can autonomously COMMIT or RELEASE and issue an ES256 MSE+JWT receipt whose legacy machine field is independent_verification=true. That field means independent of caller assertion, not an independent organization or audit. Pending, unavailable, unknown or conflicting results stay fail-closed and are retried through durable leases. Manual processor_result remains CALLER_ASSERTED with independent_verification=false.
+
+POST /api/v1/preflight and check_ai_payment_authority are analysis-only. They always return enforcement_authorized=false, including with a live API key. A policy ALLOW by itself is never payment authorization.
+
+## Zero-account activation and externally bound self-reports
+
+POST https://mandateshield.com/api/v2/sandbox/lifecycle accepts only an empty JSON object or {"scenario":"SUCCESS"} and forbids Authorization credentials. It runs one request-local simulation with ephemeral authority, provider and artifact keys through challenge, strict decision, atomic reservation, provider-bound permit, replay rejection, simulated provider attestation, COMMIT and signed execution-receipt verification. It is test-only: no lifecycle state survives the response, no production credential is used, no user-supplied URL is fetched, no external provider or independent organization participates, and no money moves. Its internally role-separated provider evidence does not establish third-party validation, production conformance, certification or a real provider outcome.
+
+The public Proof Network is available at GET https://mandateshield.com/api/v1/proof-network/proofs. A claimant first POSTs a complete offline-vector report and an HTTPS-domain or public GitHub-repository subject to /api/v1/proof-network/challenges, proves DNS TXT control or the exact binding file at a public repository commit, then POSTs the signed challenge to /api/v1/proof-network/attestations. MandateShield verifies the external subject binding and report integrity and signs an EXTERNALLY_BOUND_SELF_REPORT. The claimed implementation and conformance run are not independently executed. Entries and abuse counters are not users, customers or installations; hosted sandbox runs are excluded; attestations are non-authorizing and are not audits or certification.
+
+The separate account-bound Deploy & Prove flow starts at https://mandateshield.com/launch. After authenticated terms acceptance, verified control of an eligible external HTTPS domain or public GitHub repository, one strict reservation and one fresh credential-bound permit redemption, the pilot may complete privately. Private completion publishes no record and is not listed publicly. The initial signed account-bound challenge carries no publication direction. Only a separate fresh finalization with publication_consent=true may publish an ACCOUNT_BOUND_SERVER_OBSERVED_ACTIVATION at https://mandateshield.com/deployment-proofs and GET https://mandateshield.com/api/v1/deployment-proofs. The current immutable runner URL and SHA-256 are published at https://mandateshield.com/launch/runner-release.json. A published record means MandateShield verified external-subject control at binding.verified_at and observed the bounded activation chain. Final proof issuance does not re-verify subject control. Fork-only, pull-request-ref, and non-default-branch commits do not satisfy the GitHub binding. Every proof states mandateshield_provider_submission_observed=false, mandateshield_provider_enforcement_observed=false, provider_evidence_recorded=false and independent_terminal_evidence_verified=false. These are scoped MandateShield observations; activity outside MandateShield is not observed. The official runner contains no payment-provider client. operator_exclusion_no_match_at_evaluation=true is only a ruleset result at eligibility.evaluated_at; final proof issuance does not rerun the classifier, and the result is not independent identity or independent-organization verification. A record is not a customer, revenue, audit, certification, security guarantee, runtime inspection or non-bypassability claim. This flow is distinct from the Proof Network's claimant-supplied conformance self-report.
+
+## Registry-independent installation
+
+These release-pinned, origin-hosted packages are directly installable without a third-party package-registry listing:
+
+- Node.js: `npm install https://mandateshield.com/packages/npm/1.13.0/mandateshield-sdk-1.13.0.tgz`
+- Python: `python3 -m pip install --index-url https://mandateshield.com/packages/python/simple mandateshield==1.13.0`
+- Go: `GONOSUMDB=github.com/mandateshield/mandateshield-go GOPROXY=https://mandateshield.com/packages/go go get github.com/mandateshield/mandateshield-go@v1.13.0`
+- Agent plugin: https://mandateshield.com/plugins/mandateshield/plugin.json
+- PostgreSQL Gateway journal package export: `@mandateshield/sdk/gateway/postgres`
+- PostgreSQL Gateway journal SQL export: `@mandateshield/sdk/gateway/postgres/schema.sql`
+
+The packages are hosted by MandateShield and covered by the release manifest and SHA-256 checksums. No third-party package-registry or plugin-directory publication is claimed, including npm, PyPI, pkg.go.dev, GitHub Marketplace and the OpenAI plugin directory.
+
+## Official PostgreSQL DurableGatewayJournal
+
+The first-party customer-side PostgreSQL module implements the Gateway v2 begin, primary-read and compare-and-set contract over an explicit versioned migration. It accepts a customer-supplied structural query interface and has no PostgreSQL driver dependency. The database connection credential and journal rows stay in customer infrastructure and are not sent to MandateShield.
+
+Every Gate process and region must reach the same writable, actually linearizable PostgreSQL primary. The readiness check rejects recovery, read-only, incompatible-schema and unsafe synchronous-commit settings. It does not attest routing, replication or failover; topology_attested is false and split-brain writers are unsafe. The namespace prevents accidental collisions and is not an authorization boundary.
+
+This generic Gateway coordination journal is separate from the x402 adapter's encrypted signed-payment-payload artifactJournal and does not replace it. It is a first-party reference implementation, not managed storage, topology certification, an independent audit or evidence of adoption.
+
+- Guide: https://mandateshield.com/integrations/postgres-gateway-journal
+- Pinned JavaScript: https://mandateshield.com/sdk/v1.13.0/mandateshield-postgres-gateway-journal.mjs
+- Pinned TypeScript declarations: https://mandateshield.com/sdk/v1.13.0/mandateshield-postgres-gateway-journal.d.ts
+- Pinned SQL migration: https://mandateshield.com/sdk/v1.13.0/mandateshield-postgres-gateway-journal.sql
+- Rolling JavaScript alias: https://mandateshield.com/sdk/mandateshield-postgres-gateway-journal.mjs
+- Rolling TypeScript alias: https://mandateshield.com/sdk/mandateshield-postgres-gateway-journal.d.ts
+- Rolling SQL alias: https://mandateshield.com/sdk/mandateshield-postgres-gateway-journal.sql
+
+## Strict production trust
+
+Live v2 requires an active VERIFY-scoped live API key, an immutable account-registered mandate version, an account-pinned public JWK, exact signed issuer/audience/protocol matching, a server-issued five-minute one-time challenge, signed iat and exp with a maximum 24-hour window, exact canonical purchase-digest binding (TAP uses content-digest), a durable account-wide replay tombstone, a signed ES256 receipt, a public transparency record, a private execution-audit record and an atomic RESERVED execution-authorization record.
+
+Supported authority-signature algorithms are ES256, RS256 and PS256. MandateShield decision receipts are signed with ES256.
+
+Mandates can set optional LIFETIME, UTC-DAY and UTC-MONTH cumulative budgets. Fiat budgets are positive integer minor units; atomic-asset budgets are exact positive canonical integer strings. Verification reserves all configured counters atomically. COMMIT moves reserved spend to committed spend; RELEASE or unconsumed expiry returns it. After the settlement deadline, an unresolved consumed outcome is conservatively charged to the cumulative budget and never auto-released.
+
+A public key supplied in a request verifies signature math but is not trusted by itself. Anonymous, test, caller-supplied-key and non-persisted results are non-executable.
+
+Prompt-injection patterns and privacy-thresholded community signals are advisory REVIEW inputs, never automatic community blocks. Deterministic policy, signature, binding, trust, freshness and replay failures block.
+
+## Category clarification
+
+MandateShield is not SEPA, ACH or Bacs direct-debit mandate software; not electronic-signature software; and not a payment processor. Here, “mandate” means bounded purchase authority delegated by a person to an AI agent.
+
+Assurance modes are distinct: Verify analyzes; Reserve creates stateful authority; the v1.13 permit/redemption service offers a cryptographic provider-bound handoff; Gate enforcement exists only in the customer deployment; Reconcile is provider-specific; Evidence is first-party unless an external source is explicitly identified. The v2 Doctor levels OPERATOR_DECLARED_EGRESS_CONTROLS and OPERATOR_DECLARED_PROVIDER_OUTCOME_CONTROLS mean only that supplied operator declarations passed deterministic controls. MandateShield does not inspect or independently audit the deployment, and no payment provider attests to those levels. MandateShield currently claims no provider or facilitator adoption and no rejection of permitless operations. PROVIDER_ENFORCED may be claimed only for an identified provider that actually requires and redeems the permit; FACILITATOR_ENFORCED may be claimed only for an identified facilitator doing the same. Neither is a current general product claim.
+
+## Canonical resources
+
+- [Homepage](https://mandateshield.com/): Product explanation and analysis tools
+- [Production documentation](https://mandateshield.com/docs): Strict integration and execution invariant
+- [Security architecture](https://mandateshield.com/security): Trust model, threats, data boundary and limitations
+- [Developer hub](https://mandateshield.com/developers): Challenge, verify, receipt, MCP and A2A overview
+- [Integration packages](https://mandateshield.com/integrations): Zero-dependency JavaScript client, CLI and framework examples
+- [Primary AP2-to-Stripe last-mile profile](https://mandateshield.com/integrations/ap2-to-stripe): Install the customer-side adapter at @mandateshield/sdk/gateway/stripe-payment-intents; it binds the supported signed closed-payment projection, Stripe connected account, PaymentMethod and exact form-body digest, then checks the returned PaymentIntent against that permit without trusting the caller report. Full AP2 validation and Stripe payment processing remain external
+- [PostgreSQL DurableGatewayJournal](https://mandateshield.com/integrations/postgres-gateway-journal): First-party customer-controlled Gateway v2 journal with explicit SQL migration and bounded readiness checks
+- [Optional x402 v2 exact compatibility profile](https://mandateshield.com/integrations/x402-v2-exact): Customer-side evidence profile around native EIP-3009 authorization, idempotency and settlement controls; not the primary product differentiation
+- [Dashboard](https://mandateshield.com/dashboard): Account control plane for role-separated keys, cumulative-budget mandates and trusted issuer keys
+- [OpenAPI](https://mandateshield.com/openapi.json): OpenAPI 3.1 contract
+- [Zero-account strict lifecycle sandbox](https://mandateshield.com/sandbox): Request-local test-only lifecycle with no external organization or money movement
+- [Strict lifecycle sandbox endpoint](https://mandateshield.com/api/v2/sandbox/lifecycle): POST one isolated simulated SUCCESS run without credentials
+- [Strict lifecycle sandbox specification](https://mandateshield.com/specifications/strict-lifecycle-sandbox/v1): Exact request, lifecycle and no-third-party assurance contract
+- [Proof Network](https://mandateshield.com/proof-network): Externally bound implementation self-reports with explicit non-user and non-certification semantics
+- [Proof Network list](https://mandateshield.com/api/v1/proof-network/proofs): Public signed self-report summaries
+- [Proof attestation specification](https://mandateshield.com/specifications/proof-attestation/v1): Domain/GitHub binding and claimant-output trust boundary
+- [Deploy & Prove](https://mandateshield.com/launch): Account-bound guided activation using an externally controlled subject and one narrowly limited live lifecycle
+- [Deployment activation proofs](https://mandateshield.com/deployment-proofs): Human-readable server-observed activation records with explicit negative assurance claims
+- [Deployment activation proof list](https://mandateshield.com/api/v1/deployment-proofs): Public signed activation summaries
+- [Deployment activation proof specification](https://mandateshield.com/specifications/deployment-activation-proof/v1): Exact server observations, external-subject binding and assurance limits
+- [Open boundary specification](https://mandateshield.com/standard): Vendor-published Mandate Execution Boundary v2.4
+- [Reason codes](https://mandateshield.com/reason-codes.json): Machine-readable finding registry
+- [Receipt JWKS](https://mandateshield.com/.well-known/jwks.json): Public ES256 receipt-verification keys
+- [Execution Permit v1 specification](https://mandateshield.com/specifications/execution-permit/v1): Exact provider-bound claims, 60-second maximum lifetime and non-executable offline-verification rule
+- [Execution Permit v1 schema](https://mandateshield.com/schemas/execution-permit-v1.json): Machine-readable MSP+JWT claim contract
+- [Execution Receipt v1 specification](https://mandateshield.com/specifications/execution-receipt/v1): Signed historical terminal-evidence contract and evidence-class semantics
+- [Execution Receipt v1 schema](https://mandateshield.com/schemas/execution-receipt-v1.json): Machine-readable MSE+JWT claim contract
+- [ProviderSubmission v1 schema](https://mandateshield.com/schemas/provider-submission-v1.json): One exact permit-bound provider-attempt state machine
+- [ProviderEvidence v1 schema](https://mandateshield.com/schemas/provider-evidence-v1.json): Caller, provider-API and chain evidence classification
+- [ReconciliationRecord v1 schema](https://mandateshield.com/schemas/reconciliation-record-v1.json): Durable reconciliation lease, retry and resolution state
+- [Execution assurance level v1 schema](https://mandateshield.com/schemas/execution-assurance-level-v1.json): Deployment evidence and named external-enforcement vocabulary
+- [MCP endpoint](https://mandateshield.com/api/mcp): Stateless MCP 2026-07-28 server/discover plus initialize-based 2025-11-25, 2025-06-18 and 2025-03-26 compatibility for analysis-only and strict verification tools
+- [Standalone no-auth MCP profile](https://mandateshield.com/api/mcp/plugin): Non-executable payment-authority analysis and AP2/x402/MPP field projection
+- [A2A card](https://mandateshield.com/.well-known/agent-card.json): Agent discovery
+- [Agent manifest](https://mandateshield.com/.well-known/mandateshield.json): Canonical endpoints and schemas
+- [Full AI context](https://mandateshield.com/llms-full.txt): Extended machine-readable product context
+- [Methodology](https://mandateshield.com/methodology): Claim derivation, evidence and limitations
+- [Payment-authority control matrix](https://mandateshield.com/evidence/payment-authority-control-matrix): Versioned claim-to-evidence map with machine-readable JSON
+- [Protocol support matrix](https://mandateshield.com/evidence/protocol-support-matrix): Exact native, normalized and external protocol boundaries
+- [Canonical payee identity v1](https://mandateshield.com/specifications/payee-identity/v1): Exact x402, MPP, Stripe and custom-provider payee bindings
+- [Payee identity schema](https://mandateshield.com/schemas/payee-identity-v1.json): Strict machine-readable provider identity contract
+- [Payee identity evidence](https://mandateshield.com/evidence/v1/payee-identity.json): Machine-readable assurance boundary and external verification responsibilities
+- [MandateShield Gate](https://mandateshield.com/gate): Customer-controlled enforcement boundary, assurance ladder, offline Doctor and conservative deployment templates
+- [Deployment assurance schema v2](https://mandateshield.com/schemas/deployment-assurance-v2.json): Current non-secret Doctor contract for agent credential absence, sole execution-service egress, exact provider binding, fresh online redemption and negative bypass testing
+- [Deployment assurance schema v1](https://mandateshield.com/schemas/deployment-assurance-v1.json): Immutable legacy Doctor contract retained for compatibility; not the current assurance profile
+- [x402 Gate execution profile](https://mandateshield.com/specifications/x402-gate/v1): Normative exact-request, transmit-once and settlement-proof rules
+- [x402 artifact journal schema](https://mandateshield.com/schemas/x402-gate-artifact-v1.json): Customer-side durable signed-payload record contract
+- [Gateway adapter specification v2](https://mandateshield.com/specifications/gateway-adapter/v2): Consume recovery, provider-intent lease and provider-input binding
+- [Gateway journal schema v2](https://mandateshield.com/schemas/gateway-adapter-v2.json): Machine-readable durable gateway state contract
+- [Bounded formal execution model](https://mandateshield.com/evidence/formal-execution-model): Vendor-authored TLA+ state machine plus actually executed finite TypeScript exploration and mutation controls
+- [Formal model results](https://mandateshield.com/evidence/formal-execution-model/v1/results.json): Machine-readable bounds, invariant outcomes, mutation detections and explicit proof limitations
+- [AP2, x402 v2 and MPP protocol bridge](https://mandateshield.com/tools/protocol-bridge): Documented-field projection with an explicit non-executable assurance boundary
+- [Release integrity](https://mandateshield.com/evidence/release-integrity): Human-readable, versioned and hash-verifiable first-party release evidence
+- [Release manifest](https://mandateshield.com/evidence/v1.13.0/release-manifest.json): Machine-readable product v1.13.0 hashes, pinned schemas and first-party SPDX SBOM
+- [Versioned JavaScript SDK](https://mandateshield.com/sdk/v1.13.0/mandateshield.mjs): Pin this release for production integrations
+- [Versioned execution-evidence verifier](https://mandateshield.com/sdk/v1.13.0/mandateshield-execution-evidence-verifier.mjs): Offline ES256 execution-permit and terminal-receipt verification; never grants online submission
+- [Execution-evidence verifier declarations](https://mandateshield.com/sdk/v1.13.0/mandateshield-execution-evidence-verifier.d.ts): Exact TypeScript verification contract
+- [Versioned gateway adapter](https://mandateshield.com/sdk/v1.13.0/mandateshield-gateway.mjs): Customer-side consume-once coordinator
+- [Gateway TypeScript declarations](https://mandateshield.com/sdk/v1.13.0/mandateshield-gateway.d.ts): Exact adapter and journal contract
+- [Versioned x402 exact adapter](https://mandateshield.com/sdk/v1.13.0/mandateshield-x402-v2-exact.mjs): Narrow customer-side EIP-3009 execution Gate
+- [x402 TypeScript declarations](https://mandateshield.com/sdk/v1.13.0/mandateshield-x402-v2-exact.d.ts): Exact adapter, verifier and artifact contract
+- [Release checksums](https://mandateshield.com/sdk/v1.13.0/SHA256SUMS): SHA-256 verification rows for every listed release artifact
+- [x402 compatibility evidence](https://mandateshield.com/evidence/v1.13.0/x402-compatibility.json): Tested @x402/core/@x402/evm package versions, separately pinned specification references and explicit limitations
+- [x402 compatibility evidence schema](https://mandateshield.com/schemas/x402-compatibility-evidence/v1): Machine-readable first-party claim boundary
+- [MCP payment authorization guide](https://mandateshield.com/guides/mcp-payment-authorization): Safe MCP-to-payment integration sequence
+- [Agentic payments glossary](https://mandateshield.com/reference/agentic-payments-glossary): Stable definitions for AI systems and developers
+
+## Strict endpoints
+
+- POST https://mandateshield.com/api/v2/sandbox/lifecycle — zero-account, test-only request-local strict lifecycle; no production credentials, external provider, independent organization or money movement
+- POST https://mandateshield.com/api/v2/normalize — parse AP2, x402 v2 or MPP source syntax into a non-executable purchase envelope
+- POST https://mandateshield.com/api/v2/challenges — issue a one-time live challenge for a registered mandate
+- POST https://mandateshield.com/api/v2/verify — verify one signed purchase-authority attempt
+- POST https://mandateshield.com/api/v2/batch — verify 1–25 independent strict inputs
+- POST https://mandateshield.com/api/v2/execution-authorizations — with an audience-bound PROCESSOR key, CONSUME, COMMIT, RELEASE or EXPIRE one reserved authorization
+- POST https://mandateshield.com/api/v2/execution-permits/verify — signature and audience inspection only; always non-executable
+- POST https://mandateshield.com/api/v2/execution-permits/redeem — atomically claim the exact permit and provider request; only one fresh claim returns provider submission permission true
+- POST https://mandateshield.com/api/v2/provider-submissions — record a provider attempt, check its terminal outcome without trusting the caller report and return autonomous finalization evidence or a fail-closed reconciliation state; this is not an independent organization or audit
+- POST https://mandateshield.com/api/v2/execution-receipts/verify — verify a historical execution receipt; execution_authorized is always false
+
+## Proof Network endpoints
+
+- GET https://mandateshield.com/api/v1/proof-network/proofs — list externally bound self-report summaries; entries are not users, customers or installations
+- POST https://mandateshield.com/api/v1/proof-network/challenges — validate claimant-supplied offline-vector outputs and issue a signed domain or GitHub binding challenge
+- POST https://mandateshield.com/api/v1/proof-network/attestations — verify the external binding and issue a signed non-authorizing self-report
+- GET https://mandateshield.com/api/v1/proof-network/proofs/{proof_id} — retrieve the full signed attestation and caveat
+- GET https://mandateshield.com/api/v1/proof-network/proofs/{proof_id}/badge.svg — retrieve the “externally bound self-report” badge; it is not certification
+
+## Deployment activation proof endpoints
+
+- GET https://mandateshield.com/api/v1/deployment-proofs — list account-bound server-observed activation summaries; entries do not establish customers or revenue
+- GET https://mandateshield.com/api/v1/deployment-proofs/{proof_id} — retrieve the signed activation, exact positive observations and false assurance fields
+- GET https://mandateshield.com/api/v1/deployment-proofs/{proof_id}/badge.svg — retrieve the bounded “server-observed activation” badge; it is not an audit, certification or security guarantee
+- GET https://mandateshield.com/deployment-proofs/{proof_id} — inspect the human-readable proof and its caveats
+- https://mandateshield.com/specifications/deployment-activation-proof/v1 — normative public meaning of the record
+
+- POST https://mandateshield.com/api/v2/receipts/verify — verify a compact MandateShield receipt
+- GET https://mandateshield.com/api/v2/transparency/{receipt_id} — retrieve the privacy-safe, append-only issuance record while retained under the account plan
+
+## Free analysis tools
+
+- [AI Agent Payment Validator](https://mandateshield.com/tools/ai-agent-payment-validator)
+- [AI Agent Payment Risk Assessment](https://mandateshield.com/tools/ai-agent-payment-risk-assessment)
+- [AI Payment Mandate Builder](https://mandateshield.com/tools/ai-payment-mandate-builder)
+- [Cryptographic Authority Verifier](https://mandateshield.com/tools/cryptographic-authority-verifier)
+- [AP2, x402 v2 & MPP Protocol Bridge](https://mandateshield.com/tools/protocol-bridge)
+
+These public tools demonstrate policy and signature behavior; they do not establish live execution authority.
+
+## Protocol adapters and paid API scope
+
+MandateShield maps the documented fields of an AP2 terminal closed-payment projection, x402 v2 PAYMENT-REQUIRED offer, or MPP Payment charge challenge into one deterministic envelope. X402 binds canonical network+payTo identity and MPP binds canonical HTTPS service origin+method identity; merchant_id alone is insufficient. Evidence references are bound but not independently fetched or certified. assurance.projection_fields_valid=true is not full source-protocol conformance, and assurance.enforcement_authorized is always false. The protocol bridge itself does not verify the full AP2 chain, create an x402 PAYMENT-SIGNATURE, verify an MPP method credential or settle a payment.
+
+The separate first-party customer-side x402 v2 exact/EIP-3009 Gate adapter can create one payment payload through a customer-configured compatible x402 client only after its documented fresh consume result. Product v1.13.0 tests the exact pinned @x402/core and @x402/evm 2.19.0 client path. The adapter binds a signed application-request projection and MandateShield settlement deadline, reserves 180 seconds for safe expiry proof and release, requires one configured payer plus local signer recovery, and atomically claims network+asset+payer+nonce ownership in one globally shared linearizable customer journal. Before paid transmission it captures the latest canonical block and proves the exact nonce unused through a block-hash-pinned require-canonical query; the complete anchor is persisted with the signed payload. Commit requires a canonical later block whose ancestry includes that anchor and a transaction whose transferWithAuthorization call, nonce, validity window, payer, payee, asset and amount match. Ambiguity is never automatically retransmitted or released. A finalized unused nonce can release only before MandateShield's settlement deadline and only with proof bound to the persisted anchor; later unused evidence remains UNKNOWN and conservatively charged. The runtime requires a GLOBAL_SHARED_LINEARIZABLE journal declaration, but the customer remains responsible for the backing store, verifier correctness and split-brain prevention. Wallets, RPC credentials, payloads and paid resources remain outside the hosted service. This customer-side adapter is distinct from the provider-bound v1.13 permit/redemption handoff and is not external provider enforcement. The narrow profile is not all-x402 support, a facilitator, settlement service, partnership, certification or exactly-once HTTP guarantee.
+
+Strict v2 separately verifies an account-pinned signature over the final envelope. MCP, MPP and x402 transport or negotiate capabilities and payment; none is by itself proof that the exact purchase stayed inside delegated human or enterprise authority.
+
+The MCP endpoint supports the stateless 2026-07-28 server/discover and named-call shape and retains initialize-based compatibility for 2025-11-25, 2025-06-18 and 2025-03-26. It issues no MCP session ID. Both protocol eras expose the same non-execution boundary: no PROCESSOR transition, permit-redemption, provider-submission or payment-execution tool.
+
+## Solutions, protocols and threats
+
+- [Outcome verification for AI agents using Stripe or x402](https://mandateshield.com/solutions/ai-agent-builders): Bind a supported provider request, grant one fresh online permit claim, and verify the terminal outcome without trusting the calling agent's report.
+- [Accept AI-agent orders without trusting the model](https://mandateshield.com/solutions/ecommerce-merchants): Reserve authority for autonomous checkout totals, merchant identity and user-approved limits, then require gateway consumption before creating a charge.
+- [Policy enforcement for multi-merchant agent checkout](https://mandateshield.com/solutions/marketplaces): Control seller substitution, price drift and replay across marketplace purchases initiated by AI agents.
+- [Pre-authorization control for agentic payments](https://mandateshield.com/solutions/payment-providers): Add user-mandate enforcement before payment processing, alongside existing fraud and risk systems.
+- [Explainable controls for autonomous transaction authority](https://mandateshield.com/solutions/fintech-compliance): Produce deterministic AI-payment decisions, reason codes and minimal receipts for operational oversight.
+- [Payment controls for paid APIs, MCP tools and machine services](https://mandateshield.com/solutions/paid-apis-and-mcp-tools): Authorize provider, resource, exact price and cumulative budget before an AI agent pays for an API call or MCP tool.
+- [AI procurement agent spending controls](https://mandateshield.com/solutions/enterprise-procurement-agents): Give procurement agents enforceable supplier scopes, exact transaction limits and concurrent daily or monthly budgets.
+- [Stop AI-agent overspend before payment](https://mandateshield.com/threats/ai-agent-overspend): Enforce a hard maximum against the final amount, including checkout changes, fees and currency boundaries.
+- [Prevent merchant substitution in agentic checkout](https://mandateshield.com/threats/merchant-substitution): Bind an autonomous purchase to the intended seller or approved merchant scope before execution.
+- [Contain prompt injection at the payment boundary](https://mandateshield.com/threats/prompt-injection-payments): Assume instruction overrides can succeed, use heuristic signals only for review, and contain payment impact with deterministic policy outside the model.
+- [Enforce consume-once authority before payment submission](https://mandateshield.com/threats/payment-replay-attacks): Consume each MandateShield decision once, reject a second permit redemption, and preserve provider idempotency as a separate requirement.
+- [Mediate the AI-payment authorization-to-execution gap](https://mandateshield.com/threats/authorization-execution-gap): Bind an approved autonomous purchase to one supported provider request, one fresh online permit claim and an outcome checked by MandateShield without trusting the caller report.
+- [Keep AI purchases inside current user consent](https://mandateshield.com/threats/consent-drift): Reject missing, stale or weakly bound authority when checkout facts change after the user delegates a purchase.
+- [Stop concurrent AI agents from overspending one shared budget](https://mandateshield.com/threats/concurrent-agent-budget-exhaustion): Use atomic reservations so parallel agent purchases cannot all pass the same stale daily, monthly or lifetime budget check.
+
+## Limitations
+
+MandateShield is not a payment processor, fraud guarantee, sanctions service or card vault. It does not claim an independent certification, third-party audit, customer deployment, financial outcome or accredited industry-standard status unless an identifiable evidence source is published.

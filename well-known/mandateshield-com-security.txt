@@ -1,0 +1,6 @@
+Contact: mailto:support@hemelion.com
+Contact: https://mandateshield.com/responsible-disclosure
+Expires: 2027-07-26T23:59:59Z
+Preferred-Languages: en
+Canonical: https://mandateshield.com/.well-known/security.txt
+Policy: https://mandateshield.com/responsible-disclosure

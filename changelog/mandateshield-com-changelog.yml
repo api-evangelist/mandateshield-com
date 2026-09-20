@@ -1,0 +1,65 @@
+generated: '2026-09-19'
+method: probed
+source: https://mandateshield.com/current-release.json
+docs: https://mandateshield.com/current-release
+title: MandateShield release stream
+scheme: semver product releases with immutable per-version release manifests
+current_version: 1.13.0
+openapi_version: 3.4.0
+standard_version: 2.4.0
+entry_count: 6
+note: 'MandateShield publishes no human-facing dated changelog (/changelog 404s and feed.xml carries only the release
+  timestamp on every item). What it does publish is a machine-readable release stream: current-release.json names
+  the current and previous release, and each version keeps an immutable manifest at /evidence/v<version>/release-manifest.json
+  with released_at, checksums and an SBOM. The entries below are those manifests, probed 2026-09-19. Per-version
+  highlights are recorded only where the provider states them.'
+entries:
+- version: 1.13.0
+  date: '2026-07-28'
+  released_at: '2026-07-28T14:25:22.000Z'
+  status: current
+  breaking: null
+  manifest: https://mandateshield.com/evidence/v1.13.0/release-manifest.json
+  highlights:
+  - OpenAPI contract v3.4.0, boundary specification v2.4.0
+  - 'Release package: JS SDK, CLI, gateway, PostgreSQL DurableGatewayJournal, Stripe PaymentIntents and x402 v2
+    exact adapters, offline verifiers, Node/Python/Go packages, agent plugin, SPDX 2.3 SBOM'
+  note: Highlights are the artifact inventory of the release manifest; the provider publishes no per-release change
+    narrative.
+- version: 1.12.0
+  date: '2026-07-28'
+  released_at: '2026-07-28T13:34:29.000Z'
+  status: superseded
+  manifest: https://mandateshield.com/evidence/v1.12.0/release-manifest.json
+- version: 1.11.0
+  date: '2026-07-28'
+  released_at: '2026-07-28T07:16:55.000Z'
+  status: superseded
+  manifest: https://mandateshield.com/evidence/v1.11.0/release-manifest.json
+  note: The version the provider's /trust page says was active on the official MCP registry when queried 2026-07-28.
+- version: 1.10.0
+  date: '2026-07-26'
+  released_at: '2026-07-26T19:12:33.000Z'
+  status: superseded
+  manifest: https://mandateshield.com/evidence/v1.10.0/release-manifest.json
+- version: 1.9.0
+  date: '2026-07-26'
+  released_at: '2026-07-26T17:36:37.000Z'
+  status: superseded
+  manifest: https://mandateshield.com/evidence/v1.9.0/release-manifest.json
+- version: 1.8.0
+  date: '2026-07-26'
+  released_at: '2026-07-26T15:47:18.000Z'
+  status: superseded
+  manifest: https://mandateshield.com/evidence/v1.8.0/release-manifest.json
+  note: Earliest version listed in the Python simple index and Go @v/list.
+earlier_stated_changes:
+- version: '1.7'
+  source: https://mandateshield.com/llms.txt
+  summary: Adds durable ProviderSubmission, ProviderEvidence and ReconciliationRecord state, encrypted restricted
+    provider lookup connections, Stripe API or canonical-chain checks that do not trust the caller's asserted outcome,
+    autonomous terminal budget finalization and signed terminal execution receipts.
+gaps:
+- No dated human changelog page
+- No per-release breaking/additive classification
+- feed.xml is a resources feed, not a release feed

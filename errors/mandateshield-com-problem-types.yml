@@ -1,0 +1,661 @@
+generated: '2026-09-19'
+method: derived
+source: openapi/_original/mandateshield-com-openapi.json
+docs: https://mandateshield.com/docs
+format: custom-json
+envelope:
+  schema: Error
+  media_type: application/json
+  fields:
+  - name: error
+    type: string
+    required: true
+  - name: code
+    type: string
+  - name: enforcement_authorized
+    type: boolean
+    note: present so that an error can never be mistaken for authority
+  rfc9457: false
+  additional_schemas:
+    LegalAcceptanceRequiredError: null
+    PublisherTermsRequiredError: null
+fail_closed_rule: 'Docs: "Transport failures and non-executable decisions fail closed. An unavailable strict-verification
+  service grants no new execution authority. An unavailable or ambiguous outcome check leaves the authorization
+  reserved and forbids a blind provider retry." Integrators must queue safely, retry only idempotent requests, and
+  route prolonged uncertainty to manual review.'
+status_table_from_docs:
+  '400': Invalid JSON, envelope, evidence or parameters
+  '401': Live key missing, invalid or revoked
+  '402': Production access paused or not eligible
+  '403': Production access paused or not eligible
+  '404': Registered mandate or transparency record not found
+  '409': Replay, binding, budget or illegal state transition
+  '410': Reserved execution authorization expired
+  '413': Request or sandbox limit exceeded
+  '429': Request or sandbox limit exceeded
+  '503': Receipt or required audit persistence unavailable
+problems:
+- status: 400
+  title: Invalid JSON, envelope, evidence or parameters
+  occurrences: 24
+  schemas:
+  - Error
+  operations:
+  - operation: setGlobalExecutionInterlock
+    method: POST
+    path: /api/account/execution-interlock
+    description: null
+    schema: null
+  - operation: normalizeAgentPaymentProtocol
+    method: POST
+    path: /api/v2/normalize
+    description: null
+    schema: null
+  - operation: createVerificationChallenge
+    method: POST
+    path: /api/v2/challenges
+    description: null
+    schema: null
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: null
+    schema: null
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: null
+    schema: null
+  - operation: verifyExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/verify
+    description: Permit is absent, malformed, expired, structurally invalid or fails the supplied audience context
+    schema: Error
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: Malformed permit, request binding or mismatched header/body idempotency keys
+    schema: Error
+  - operation: reportProviderSubmission
+    method: POST
+    path: /api/v2/provider-submissions
+    description: null
+    schema: null
+  - operation: receiveStripeProviderWebhook
+    method: POST
+    path: /api/v2/provider-webhooks/stripe/{connectionId}
+    description: The request, raw event body, Stripe signature or event binding is invalid
+    schema: Error
+  - operation: verifyExecutionReceipt
+    method: POST
+    path: /api/v2/execution-receipts/verify
+    description: Execution receipt is absent, malformed or fails the supplied audience context
+    schema: Error
+  - operation: verifyCryptographicAuthorityBatch
+    method: POST
+    path: /api/v2/batch
+    description: null
+    schema: null
+  - operation: verifyDecisionReceipt
+    method: POST
+    path: /api/v2/receipts/verify
+    description: Receipt is absent, malformed, expired or invalid
+    schema: Error
+  - operation: getReceiptTransparency
+    method: GET
+    path: /api/v2/transparency/{receiptId}
+    description: null
+    schema: null
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: null
+    schema: null
+  - operation: evaluatePurchaseBatch
+    method: POST
+    path: /api/v1/batch
+    description: null
+    schema: null
+  - operation: runStrictLifecycleSandbox
+    method: POST
+    path: /api/v2/sandbox/lifecycle
+    description: null
+    schema: null
+  - operation: createPublicProofChallenge
+    method: POST
+    path: /api/v1/proof-network/challenges
+    description: null
+    schema: null
+  - operation: issuePublicProofAttestation
+    method: POST
+    path: /api/v1/proof-network/attestations
+    description: null
+    schema: null
+  - operation: listPublicProofAttestations
+    method: GET
+    path: /api/v1/proof-network/proofs
+    description: null
+    schema: null
+  - operation: getPublicProofAttestation
+    method: GET
+    path: /api/v1/proof-network/proofs/{proofId}
+    description: null
+    schema: null
+  - operation: getPublicProofBadge
+    method: GET
+    path: /api/v1/proof-network/proofs/{proofId}/badge.svg
+    description: null
+    schema: null
+  - operation: listDeploymentActivationProofs
+    method: GET
+    path: /api/v1/deployment-proofs
+    description: null
+    schema: null
+  - operation: getDeploymentActivationProof
+    method: GET
+    path: /api/v1/deployment-proofs/{proofId}
+    description: null
+    schema: null
+  - operation: getDeploymentActivationProofBadge
+    method: GET
+    path: /api/v1/deployment-proofs/{proofId}/badge.svg
+    description: null
+    schema: null
+- status: 401
+  title: Live key missing, invalid or revoked
+  occurrences: 8
+  schemas:
+  - Error
+  operations:
+  - operation: getGlobalExecutionInterlock
+    method: GET
+    path: /api/account/execution-interlock
+    description: A hosting-authenticated account-owner session is required
+    schema: Error
+  - operation: setGlobalExecutionInterlock
+    method: POST
+    path: /api/account/execution-interlock
+    description: A hosting-authenticated account-owner session is required
+    schema: Error
+  - operation: createVerificationChallenge
+    method: POST
+    path: /api/v2/challenges
+    description: null
+    schema: null
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: null
+    schema: null
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: null
+    schema: null
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: null
+    schema: null
+  - operation: reportProviderSubmission
+    method: POST
+    path: /api/v2/provider-submissions
+    description: null
+    schema: null
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: null
+    schema: null
+- status: 402
+  title: Production access paused or not eligible
+  occurrences: 3
+  schemas:
+  - Error
+  operations:
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: Production access is paused
+    schema: Error
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: New consumption is blocked for an inactive account
+    schema: Error
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: Production access is paused
+    schema: Error
+- status: 403
+  title: Production access paused or not eligible
+  occurrences: 5
+  schemas:
+  - Error
+  operations:
+  - operation: setGlobalExecutionInterlock
+    method: POST
+    path: /api/account/execution-interlock
+    description: The control-plane origin is not trusted
+    schema: Error
+  - operation: createVerificationChallenge
+    method: POST
+    path: /api/v2/challenges
+    description: The account is not eligible for live challenges
+    schema: Error
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: A paid live processor key is required
+    schema: Error
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: Credential scope, exact audience or signed provider-request binding does not match
+    schema: Error
+  - operation: reportProviderSubmission
+    method: POST
+    path: /api/v2/provider-submissions
+    description: A paid live PROCESSOR key for the exact audience is required
+    schema: Error
+- status: 404
+  title: Registered mandate or transparency record not found
+  occurrences: 7
+  schemas:
+  - Error
+  operations:
+  - operation: createVerificationChallenge
+    method: POST
+    path: /api/v2/challenges
+    description: No active registered mandate matches mandate_id
+    schema: Error
+  - operation: receiveStripeProviderWebhook
+    method: POST
+    path: /api/v2/provider-webhooks/stripe/{connectionId}
+    description: No active Stripe connection matches connectionId
+    schema: Error
+  - operation: getReceiptTransparency
+    method: GET
+    path: /api/v2/transparency/{receiptId}
+    description: No transparency record exists for this receipt
+    schema: Error
+  - operation: getPublicProofAttestation
+    method: GET
+    path: /api/v1/proof-network/proofs/{proofId}
+    description: No externally bound proof has this identifier
+    schema: Error
+  - operation: getPublicProofBadge
+    method: GET
+    path: /api/v1/proof-network/proofs/{proofId}/badge.svg
+    description: Proof not found
+    schema: null
+  - operation: getDeploymentActivationProof
+    method: GET
+    path: /api/v1/deployment-proofs/{proofId}
+    description: No active deployment proof has this identifier
+    schema: Error
+  - operation: getDeploymentActivationProofBadge
+    method: GET
+    path: /api/v1/deployment-proofs/{proofId}/badge.svg
+    description: Deployment proof not found
+    schema: null
+- status: 409
+  title: Replay, binding, budget or illegal state transition
+  occurrences: 8
+  schemas:
+  - AnalysisDecision
+  - Error
+  operations:
+  - operation: setGlobalExecutionInterlock
+    method: POST
+    path: /api/account/execution-interlock
+    description: The expected generation is stale; no transition was applied
+    schema: Error
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: Sequential or concurrent payment replay blocked
+    schema: null
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: Binding mismatch, malformed provider binding, reused idempotency key, illegal state, processor-result
+      mismatch, or concurrent transition
+    schema: Error
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: Permit was already claimed by another idempotency domain
+    schema: Error
+  - operation: reportProviderSubmission
+    method: POST
+    path: /api/v2/provider-submissions
+    description: Submission, permit, claim, audience, payment reference or terminal replay binding conflicts
+    schema: Error
+  - operation: receiveStripeProviderWebhook
+    method: POST
+    path: /api/v2/provider-webhooks/stripe/{connectionId}
+    description: The signed event conflicts with the bound submission, permit or PaymentIntent
+    schema: Error
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: Sequential or concurrent replay blocked
+    schema: AnalysisDecision
+  - operation: issuePublicProofAttestation
+    method: POST
+    path: /api/v1/proof-network/attestations
+    description: The signed challenge was already finalized for a conflicting binding
+    schema: Error
+- status: 410
+  title: Reserved execution authorization expired
+  occurrences: 2
+  schemas:
+  - Error
+  operations:
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: The unconsumed execution window elapsed
+    schema: Error
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: Permit expired or its execution authorization is no longer active
+    schema: Error
+- status: 413
+  title: Request or sandbox limit exceeded
+  occurrences: 14
+  schemas: []
+  operations:
+  - operation: normalizeAgentPaymentProtocol
+    method: POST
+    path: /api/v2/normalize
+    description: null
+    schema: null
+  - operation: createVerificationChallenge
+    method: POST
+    path: /api/v2/challenges
+    description: null
+    schema: null
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: null
+    schema: null
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: null
+    schema: null
+  - operation: verifyExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/verify
+    description: null
+    schema: null
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: null
+    schema: null
+  - operation: reportProviderSubmission
+    method: POST
+    path: /api/v2/provider-submissions
+    description: null
+    schema: null
+  - operation: receiveStripeProviderWebhook
+    method: POST
+    path: /api/v2/provider-webhooks/stripe/{connectionId}
+    description: null
+    schema: null
+  - operation: verifyExecutionReceipt
+    method: POST
+    path: /api/v2/execution-receipts/verify
+    description: null
+    schema: null
+  - operation: verifyCryptographicAuthorityBatch
+    method: POST
+    path: /api/v2/batch
+    description: null
+    schema: null
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: null
+    schema: null
+  - operation: runStrictLifecycleSandbox
+    method: POST
+    path: /api/v2/sandbox/lifecycle
+    description: null
+    schema: null
+  - operation: createPublicProofChallenge
+    method: POST
+    path: /api/v1/proof-network/challenges
+    description: null
+    schema: null
+  - operation: issuePublicProofAttestation
+    method: POST
+    path: /api/v1/proof-network/attestations
+    description: null
+    schema: null
+- status: 415
+  title: (not in docs status table)
+  occurrences: 1
+  schemas:
+  - Error
+  operations:
+  - operation: runStrictLifecycleSandbox
+    method: POST
+    path: /api/v2/sandbox/lifecycle
+    description: Request is not application/json
+    schema: Error
+- status: 422
+  title: (not in docs status table)
+  occurrences: 3
+  schemas:
+  - Error
+  operations:
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: provider_binding is absent for a CONSUME on an account subject to the provider-bound default
+    schema: Error
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: A live analysis key was used without an active registered mandate
+    schema: Error
+  - operation: createPublicProofChallenge
+    method: POST
+    path: /api/v1/proof-network/challenges
+    description: Claimant-supplied outputs do not match the published offline profile
+    schema: Error
+- status: 423
+  title: (not in docs status table)
+  occurrences: 3
+  schemas:
+  - Error
+  operations:
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: The account-wide execution interlock is PAUSED or failed closed; no new MandateShield-mediated
+      reservation was created
+    schema: Error
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: CONSUME was withheld by the account-wide execution interlock; terminal evidence transitions remain
+      available
+    schema: Error
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: Fresh redemption was withheld by the account-wide execution interlock; an exact already-claimed
+      replay remains non-authorizing
+    schema: Error
+- status: 428
+  title: (not in docs status table)
+  occurrences: 7
+  schemas:
+  - Error
+  operations:
+  - operation: setGlobalExecutionInterlock
+    method: POST
+    path: /api/account/execution-interlock
+    description: Current legal acceptance is required for RESUME
+    schema: Error
+  - operation: createVerificationChallenge
+    method: POST
+    path: /api/v2/challenges
+    description: null
+    schema: null
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: null
+    schema: null
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: CONSUME requires the account's current business-agreement acceptance; COMMIT, RELEASE and EXPIRE
+      remain available for existing state
+    schema: Error
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: null
+    schema: null
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: null
+    schema: null
+  - operation: issuePublicProofAttestation
+    method: POST
+    path: /api/v1/proof-network/attestations
+    description: null
+    schema: null
+- status: 429
+  title: Request or sandbox limit exceeded
+  occurrences: 6
+  schemas:
+  - Error
+  operations:
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: Anonymous or test allowance exceeded
+    schema: Error
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: Processor transition rate limit exceeded
+    schema: Error
+  - operation: evaluatePurchase
+    method: POST
+    path: /api/v1/preflight
+    description: Anonymous or test allowance exceeded
+    schema: Error
+  - operation: runStrictLifecycleSandbox
+    method: POST
+    path: /api/v2/sandbox/lifecycle
+    description: Public sandbox rate limit exceeded
+    schema: Error
+  - operation: createPublicProofChallenge
+    method: POST
+    path: /api/v1/proof-network/challenges
+    description: Proof challenge rate limit exceeded
+    schema: Error
+  - operation: issuePublicProofAttestation
+    method: POST
+    path: /api/v1/proof-network/attestations
+    description: Proof attestation rate limit exceeded
+    schema: Error
+- status: 503
+  title: Receipt or required audit persistence unavailable
+  occurrences: 15
+  schemas:
+  - Error
+  operations:
+  - operation: setGlobalExecutionInterlock
+    method: POST
+    path: /api/account/execution-interlock
+    description: The state transition could not be verified; execution remains fail-closed when uncertain
+    schema: Error
+  - operation: verifyCryptographicAuthority
+    method: POST
+    path: /api/v2/verify
+    description: Signed receipt or a persistence record required for execution could not be committed
+    schema: Error
+  - operation: transitionExecutionAuthorization
+    method: POST
+    path: /api/v2/execution-authorizations
+    description: The atomic transition is unavailable
+    schema: Error
+  - operation: redeemExecutionPermit
+    method: POST
+    path: /api/v2/execution-permits/redeem
+    description: Atomic redemption state is unavailable or ambiguous; no provider submission is permitted
+    schema: Error
+  - operation: reportProviderSubmission
+    method: POST
+    path: /api/v2/provider-submissions
+    description: The caller observation could not be durably recorded or reconciliation state is unavailable
+    schema: Error
+  - operation: receiveStripeProviderWebhook
+    method: POST
+    path: /api/v2/provider-webhooks/stripe/{connectionId}
+    description: Durable webhook evidence or reconciliation state is unavailable
+    schema: Error
+  - operation: runStrictLifecycleSandbox
+    method: POST
+    path: /api/v2/sandbox/lifecycle
+    description: The isolated lifecycle simulation failed closed
+    schema: Error
+  - operation: createPublicProofChallenge
+    method: POST
+    path: /api/v1/proof-network/challenges
+    description: Proof challenge signing unavailable
+    schema: Error
+  - operation: issuePublicProofAttestation
+    method: POST
+    path: /api/v1/proof-network/attestations
+    description: Binding verification or persistence unavailable
+    schema: Error
+  - operation: listPublicProofAttestations
+    method: GET
+    path: /api/v1/proof-network/proofs
+    description: Proof network temporarily unavailable
+    schema: Error
+  - operation: getPublicProofAttestation
+    method: GET
+    path: /api/v1/proof-network/proofs/{proofId}
+    description: Proof network temporarily unavailable
+    schema: Error
+  - operation: getPublicProofBadge
+    method: GET
+    path: /api/v1/proof-network/proofs/{proofId}/badge.svg
+    description: Proof network temporarily unavailable
+    schema: null
+  - operation: listDeploymentActivationProofs
+    method: GET
+    path: /api/v1/deployment-proofs
+    description: Deployment-proof list temporarily unavailable
+    schema: Error
+  - operation: getDeploymentActivationProof
+    method: GET
+    path: /api/v1/deployment-proofs/{proofId}
+    description: Deployment proof temporarily unavailable
+    schema: Error
+  - operation: getDeploymentActivationProofBadge
+    method: GET
+    path: /api/v1/deployment-proofs/{proofId}/badge.svg
+    description: Deployment proof temporarily unavailable
+    schema: null
+decision_findings: HTTP 200 decisions carry decision ALLOW|REVIEW|BLOCK with findings[] {code, message, severity};
+  the 91 stable codes live in errors/mandateshield-com-error-codes.yml (from https://mandateshield.com/reason-codes.json).
+related:
+  conventions: conventions/mandateshield-com-conventions.yml
+  rate_limits: rate-limits/mandateshield-com-rate-limits.yml

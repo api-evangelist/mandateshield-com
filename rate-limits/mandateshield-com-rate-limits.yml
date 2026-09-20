@@ -1,0 +1,92 @@
+generated: '2026-09-19'
+method: searched
+source: https://mandateshield.com/pricing
+docs:
+- https://mandateshield.com/pricing
+- https://mandateshield.com/docs
+- https://mandateshield.com/openapi.json
+limit_count: 2
+summary: Two numeric limits are published — an anonymous allowance of 200 mandate validations per day and a test-key
+  quota of 5,000 persisted decisions per month. The contract declares 429 on six operations with a distinct reason
+  each, but the processor-transition, public-sandbox and proof-network ceilings are not given as numbers, and no
+  rate-limit response headers are documented or observed.
+rate_limits:
+- name: Anonymous (no-account) analysis allowance
+  scope: per anonymous caller (partition not specified)
+  limit: 200
+  window: 1 day
+  metric: mandate validations (v1 preflight/batch decisions)
+  burst: null
+  applies_to:
+  - POST /api/v1/preflight
+  - POST /api/v1/batch
+  - check_ai_payment_authority (MCP)
+  status_on_exhaustion: 429
+  reason_text: Anonymous or test allowance exceeded
+  source: https://mandateshield.com/pricing
+- name: Test-key persisted decision quota
+  scope: per account (test key)
+  limit: 5000
+  window: 1 month
+  metric: persisted decisions
+  burst: null
+  applies_to:
+  - POST /api/v1/preflight
+  - POST /api/v2/verify
+  - POST /api/v1/batch
+  - POST /api/v2/batch
+  status_on_exhaustion: 429
+  reason_text: Anonymous or test allowance exceeded
+  source: https://mandateshield.com/pricing
+undocumented_limits:
+- applies_to: POST /api/v2/execution-authorizations
+  status: 429
+  reason_text: Processor transition rate limit exceeded
+  numeric_limit: null
+- applies_to: POST /api/v2/sandbox/lifecycle
+  status: 429
+  reason_text: Public sandbox rate limit exceeded
+  numeric_limit: null
+- applies_to: POST /api/v1/proof-network/challenges
+  status: 429
+  reason_text: Proof challenge rate limit exceeded
+  numeric_limit: null
+- applies_to: POST /api/v1/proof-network/attestations
+  status: 429
+  reason_text: Proof attestation rate limit exceeded
+  numeric_limit: null
+paid_quotas: Included monthly decisions per plan (50,000 / 500,000 / 5,000,000 / 50,000,000) with per-decision overage
+  — see plans/mandateshield-com-plans-pricing.yml; these are billing quotas, not throttles.
+payload_caps:
+- name: Batch size
+  limit: 1–25 items
+  applies_to:
+  - POST /api/v1/batch
+  - POST /api/v2/batch
+- name: Request size
+  status: 413
+  note: '"Request or sandbox limit exceeded" (docs HTTP status table); byte limit not published'
+- name: Proof list page size
+  limit: limit query parameter, max 50 items
+  applies_to:
+  - GET /api/v1/proof-network/proofs
+  - GET /api/v1/deployment-proofs
+headers:
+  documented: []
+  observed: []
+  retry_after: false
+  probe:
+    fetched: '2026-09-19'
+    request: POST https://mandateshield.com/api/v1/preflight, anonymous, body {}
+    http_status: 200
+    rate_limit_headers_present: false
+    other_headers_of_note:
+    - 'link: rel=terms-of-service, rel=privacy-policy, rel=describedby (/.well-known/legal.json)'
+    - 'x-mandateshield-terms-version: 2026-07-28.2'
+    - 'strict-transport-security: max-age=63072000; includeSubDomains; preload'
+    - 'cache-control: no-store'
+  note: The spec declares no RateLimit-*, X-RateLimit-* or Retry-After headers (0 mentions), so an agent must treat
+    a 429 body ({error, code}) as the only signal.
+retry_guidance: 'Docs: "retry only idempotent MandateShield requests, and route prolonged uncertainty to manual
+  review; they must not switch to fail-open payment submission." Exact-input retries on the same idempotency_key
+  return the same result.'

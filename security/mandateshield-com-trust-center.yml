@@ -1,0 +1,64 @@
+generated: '2026-09-19'
+method: searched
+probe: true
+url: https://mandateshield.com/trust
+source: https://mandateshield.com/trust
+title: Is MandateShield Safe? Evidence, Limits & Due Diligence
+certifications: []
+certifications_note: 'NONE claimed, and the provider says so in three places: /trust ("No independent audit, penetration
+  test, certification, public customer reference or paid-revenue evidence is currently established"), the DPA §3
+  ("These measures do not constitute an ISO, SOC or penetration-test certification") and the release manifest attestation
+  (first_party true, independent false, source_public false). No Compliance pointer is emitted.'
+machine_readable: https://mandateshield.com/.well-known/mandateshield-evaluation.json
+machine_readable_file: well-known/mandateshield-com-evaluation.json
+publisher_assessment:
+  technical_evidence: PUBLIC_AND_EVALUABLE
+  independent_security_validation: NOT_ESTABLISHED
+  external_production_adoption: NOT_ESTABLISHED
+  paid_customer_or_revenue_evidence: NOT_PUBLICLY_ESTABLISHED
+  disposition: BOUNDED_PILOT_RECOMMENDED
+  score_or_rating_claimed: false
+evidence_grading_scale:
+- OFFICIAL EXTERNAL RECORD
+- THIRD PARTY DIRECTORY OBSERVATION
+- PUBLICLY REPRODUCIBLE FIRST PARTY
+- FIRST PARTY OBSERVATION
+- EXTERNALLY BOUND SELF REPORT
+- ABSENT
+public_evidence_listed:
+- release hashes (SHA256SUMS)
+- SPDX 2.3 SBOM
+- conformance vectors (19)
+- receipt verification keys (JWKS + release-scoped archive)
+- formal execution-model results (/evidence/formal-execution-model)
+- zero-account sandbox
+- official MCP registry record (v1.11.0 observed active 2026-07-28)
+- A2A registry listing (a2aregistry.org)
+security_architecture: https://mandateshield.com/security
+identity_disambiguation: The page states MandateShield (mandateshield.com, Bern) is unrelated to "Mandatory Shield
+  Company" / ShieldAD / ADSecure (mandatoryshield.com, Brussels) and does not audit Microsoft Active Directory or
+  Entra ID.
+related_pages:
+  legal: https://mandateshield.com/legal
+  dpa: https://mandateshield.com/dpa
+  subprocessors: https://mandateshield.com/subprocessors
+  responsible_disclosure: https://mandateshield.com/responsible-disclosure
+  release_integrity: https://mandateshield.com/evidence/release-integrity
+  methodology: https://mandateshield.com/methodology
+evidence:
+- source: https://mandateshield.com/trust
+  http_status: 200
+  fetched: '2026-09-19'
+  keywords:
+  - due diligence
+  - trust
+  - no audit claimed
+  - SPDX SBOM
+  - independent security validation NOT_ESTABLISHED
+- source: https://mandateshield.com/.well-known/mandateshield-evaluation.json
+  http_status: 200
+  fetched: '2026-09-19'
+note: 'probe-security-programs.py recorded trust=none because the page carries no certification keywords — correctly,
+  since none are claimed. This file is written by hand because the page is nonetheless a substantive, machine-backed
+  trust surface: it grades its own evidence, publishes what is NOT established, and points at reproducible artifacts.
+  Recorded as a trust center with an empty certification list, which is the honest measurement.'
