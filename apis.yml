@@ -31,7 +31,7 @@ tags:
 - x402
 - AP2
 - Stripe
-- agent-native
+- Agent-Native
 - Switzerland
 tags_raw:
 - Company
@@ -48,68 +48,16 @@ tags_raw:
 - Stripe
 - Agent-native
 - Switzerland
+- agent-native
 apis:
-- aid: mandateshield-com:payment-authority-api
-  name: MandateShield Payment Authority API
-  description: 'REST contract for the authority lifecycle: analysis-only v1 preflight, strict v2 challenges and
-    cryptographic verification, execution-authorization transitions, one-use execution permits, provider-submission
-    reconciliation, signed decision/execution receipts, a zero-account lifecycle sandbox, the public proof network
-    and deployment-activation proofs. 25 paths, 43 operations (17 explicit OPTIONS), 77 schemas, bearer API keys
-    in VERIFY and PROCESSOR roles.'
-  humanURL: https://mandateshield.com/docs
-  baseURL: https://mandateshield.com
-  tags:
-  - Payments
-  - Agentic Commerce
-  - AI Agents
-  - Payment Authorization
-  - Cryptographic Verification
-  properties:
-  - type: OpenAPI
-    url: openapi/mandateshield-com-openapi.yml
-  - type: OpenAPI
-    name: OpenAPI (provider-hosted, mutable current)
-    url: https://mandateshield.com/openapi.json
-  - type: OpenAPI
-    name: OpenAPI (provider-hosted, immutable v3.4.0)
-    url: https://mandateshield.com/openapi/3.4.0.json
-  - type: Documentation
-    url: https://mandateshield.com/docs
-  - type: APIReference
-    url: https://mandateshield.com/docs
-  - type: GettingStarted
-    url: https://mandateshield.com/connect
-  - type: Authentication
-    url: authentication/mandateshield-com-authentication.yml
-  - type: Conventions
-    url: conventions/mandateshield-com-conventions.yml
-  - type: Idempotency
-    url: conventions/mandateshield-com-conventions.yml
-  - type: ErrorCatalog
-    url: errors/mandateshield-com-problem-types.yml
-  - type: ErrorCodes
-    url: errors/mandateshield-com-error-codes.yml
-  - type: DataModel
-    url: data-model/mandateshield-com-data-model.yml
-  - type: RateLimits
-    url: rate-limits/mandateshield-com-rate-limits.yml
-  - type: Sandbox
-    url: sandbox/mandateshield-com-sandbox.yml
-  - type: Overlay
-    url: overlays/mandateshield-com-openapi-overlay.yaml
-  - type: JSONSchema
-    name: Execution permit v1 schema
-    url: https://mandateshield.com/schemas/execution-permit-v1.json
-  - type: JSONSchema
-    name: Execution receipt v1 schema
-    url: https://mandateshield.com/schemas/execution-receipt-v1.json
 - aid: mandateshield-com:mcp-server
   name: MandateShield MCP Server
-  description: Hosted, stateless Streamable HTTP MCP server at https://mandateshield.com/api/mcp. Anonymous initialize
+  description: >-
+    Hosted, stateless Streamable HTTP MCP server at https://mandateshield.com/api/mcp. Anonymous initialize
     and tools/list; three tools (check_ai_payment_authority, normalize_agent_payment_protocol, verify_cryptographic_payment_authority),
-    the third requiring a VERIFY-scoped Bearer key. A no-auth plugin profile at /api/mcp/plugin exposes the first
-    two. Registry manifest at /server.json (com.mandateshield/payment-authority). Exposes no PROCESSOR, permit-redemption
-    or provider-submission tool by design.
+    the third requiring a VERIFY-scoped Bearer key. A no-auth plugin profile at /api/mcp/plugin exposes
+    the first two. Registry manifest at /server.json (com.mandateshield/payment-authority). Exposes no
+    PROCESSOR, permit-redemption or provider-submission tool by design.
   humanURL: https://mandateshield.com/connect
   baseURL: https://mandateshield.com/api/mcp
   tags:
@@ -134,10 +82,11 @@ apis:
     url: https://mandateshield.com/plugins/mandateshield
 - aid: mandateshield-com:a2a-agent
   name: MandateShield Payment Authority Agent (A2A)
-  description: 'JSONRPC A2A interface at https://mandateshield.com/a2a serving A2A 1.0 and 0.3 profiles (selected
-    by the A2A-Version header) with three skills: project agent payment fields, analyze AI payment policy, verify
-    cryptographic payment authority. Signed agent card at /.well-known/agent-card.json; the interface exposes no
-    payment execution.'
+  description: >-
+    JSONRPC A2A interface at https://mandateshield.com/a2a serving A2A 1.0 and 0.3 profiles (selected
+    by the A2A-Version header) with three skills: project agent payment fields, analyze AI payment policy,
+    verify cryptographic payment authority. Signed agent card at /.well-known/agent-card.json; the interface
+    exposes no payment execution.
   humanURL: https://mandateshield.com/developers
   baseURL: https://mandateshield.com/a2a
   tags:
@@ -152,6 +101,753 @@ apis:
     url: https://mandateshield.com/.well-known/agent-card.json
   - type: Documentation
     url: https://mandateshield.com/developers
+- aid: mandateshield-com:mandateshield-com-account-execution-control-api
+  name: MandateShield Account execution control API
+  description: >-
+    Hosting-authenticated account-owner emergency control. The interlock governs new MandateShield-mediated
+    strict operations inside one account regardless of provider profile. It cannot stop customer infrastructure
+    that bypasses MandateShield or recall a step that committed before PAUSE.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Account execution control
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-account-execution-control-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-advisory-intelligence-api
+  name: MandateShield Advisory intelligence API
+  description: Privacy-thresholded context. Signals can require REVIEW but do not automatically block.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Advisory intelligence
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-advisory-intelligence-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-analysis-only-api
+  name: MandateShield Analysis only API
+  description: Policy diagnostics that always return enforcement_authorized=false.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Analysis only
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-analysis-only-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-deployment-activation-proofs-api
+  name: MandateShield Deployment activation proofs API
+  description: >-
+    Signed, account-bound records of an externally bound subject reaching one server-observed strict live
+    reservation and one fresh credential-bound permit redemption. The proof flow submits no payment and
+    does not establish provider enforcement, customer status, revenue, audit, certification, or security.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Deployment activation proofs
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-deployment-activation-proofs-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-deployment-proofs-api
+  name: MandateShield Deployment Proofs API
+  description: The Deployment Proofs API from MandateShield — 3 operation(s) for deployment proofs.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Deployment Proofs
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-deployment-proofs-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-execution-authorizations-api
+  name: MandateShield Execution Authorizations API
+  description: >-
+    The Execution Authorizations API from MandateShield — 1 operation(s) for execution authorizations.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Execution Authorizations
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-execution-authorizations-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-execution-evidence-api
+  name: MandateShield Execution evidence API
+  description: >-
+    Provider-bound permit redemption, caller observation intake, Stripe API or x402 chain reconciliation
+    that does not trust the caller assertion, autonomous terminal authorization finalization and signed
+    execution-evidence verification. A signed webhook is an authenticated hint; terminal authority requires
+    MandateShield to check the configured provider record or canonical-chain proof. This is not verification
+    by an independent organization. Publication does not claim PSP adoption, partnership, certification
+    or PROVIDER_ENFORCED status.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Execution evidence
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-execution-evidence-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-execution-permits-api
+  name: MandateShield Execution Permits API
+  description: The Execution Permits API from MandateShield — 2 operation(s) for execution permits.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Execution Permits
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-execution-permits-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-execution-receipts-api
+  name: MandateShield Execution Receipts API
+  description: The Execution Receipts API from MandateShield — 1 operation(s) for execution receipts.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Execution Receipts
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-execution-receipts-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-normalize-api
+  name: MandateShield Normalize API
+  description: The Normalize API from MandateShield — 1 operation(s) for normalize.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Normalize
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-normalize-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-preflight-api
+  name: MandateShield Preflight API
+  description: The Preflight API from MandateShield — 1 operation(s) for preflight.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Preflight
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-preflight-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-production-authority-api
+  name: MandateShield Production authority API
+  description: >-
+    Challenge, strict verification, and processor transitions. The documented eight-field invariant establishes
+    only a RESERVED, consumable authorization; a trusted gateway must obtain the single winning PROCESSOR-scoped
+    CONSUME transition and fresh permit claim before attempting an idempotent provider request. MandateShield
+    does not guarantee exactly-once provider delivery.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Production authority
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-production-authority-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-proof-network-api
+  name: MandateShield Proof Network API
+  description: The Proof Network API from MandateShield — 5 operation(s) for proof network.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Proof Network
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-proof-network-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-protocol-adapters-api
+  name: MandateShield Protocol adapters API
+  description: >-
+    Stateless documented-field projection for supported agent-payment inputs. X402 and MPP require a canonical
+    payee identity whose rail-specific fields exactly match the source. A successful projection is not
+    full source-protocol conformance or independent trust-evidence verification; output is deliberately
+    non-executable and must pass strict authority verification before use.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Protocol adapters
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-protocol-adapters-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-provider-submissions-api
+  name: MandateShield Provider Submissions API
+  description: >-
+    The Provider Submissions API from MandateShield — 1 operation(s) for provider submissions.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Provider Submissions
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-provider-submissions-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-public-proof-network-api
+  name: MandateShield Public proof network API
+  description: >-
+    Signed externally bound self-reports. MandateShield verifies domain or exact GitHub-commit binding
+    and claimant-report integrity; it does not run the claimant implementation, independently verify conformance,
+    count entries as users or installations, or issue certification.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Public proof network
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-public-proof-network-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-public-sandbox-api
+  name: MandateShield Public sandbox API
+  description: >-
+    Zero-account, test-only and request-local lifecycle simulation. It uses ephemeral keys, contacts no
+    external provider or independent organization, retains no lifecycle state and moves no money.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Public sandbox
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-public-sandbox-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-receipts-api
+  name: MandateShield Receipts API
+  description: Public-key signed-receipt verification and privacy-safe issuance lookup.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Receipts
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-receipts-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-sandbox-api
+  name: MandateShield Sandbox API
+  description: The Sandbox API from MandateShield — 1 operation(s) for sandbox.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Sandbox
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-sandbox-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
+- aid: mandateshield-com:mandateshield-com-verify-api
+  name: MandateShield Verify API
+  description: The Verify API from MandateShield — 1 operation(s) for verify.
+  humanURL: https://mandateshield.com/docs
+  baseURL: https://mandateshield.com/api/mcp
+  tags:
+  - Verify
+  properties:
+  - type: OpenAPI
+    url: openapi/mandateshield-com-verify-api-openapi.yml
+  - type: Documentation
+    url: https://mandateshield.com/docs
+  - type: APIReference
+    url: https://mandateshield.com/docs
+  - type: GettingStarted
+    url: https://mandateshield.com/connect
+  - type: Authentication
+    url: authentication/mandateshield-com-authentication.yml
+  - type: Conventions
+    url: conventions/mandateshield-com-conventions.yml
+  - type: Idempotency
+    url: conventions/mandateshield-com-conventions.yml
+  - type: ErrorCatalog
+    url: errors/mandateshield-com-problem-types.yml
+  - type: ErrorCodes
+    url: errors/mandateshield-com-error-codes.yml
+  - type: DataModel
+    url: data-model/mandateshield-com-data-model.yml
+  - type: RateLimits
+    url: rate-limits/mandateshield-com-rate-limits.yml
+  - type: Sandbox
+    url: sandbox/mandateshield-com-sandbox.yml
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-permit-v1.json
+  - type: JSONSchema
+    url: https://mandateshield.com/schemas/execution-receipt-v1.json
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
@@ -269,3 +965,10 @@ x-enrichment:
   status: enriched
   artifacts_added: 44
   pass: local-v3
+x-a2a:
+  verified: true
+  probed: '2026-09-26'
+  url: "https://mandateshield.com/.well-known/agent-card.json"
+  grade: "flavored"
+  protocol_version: "1.0"
+  control: 404

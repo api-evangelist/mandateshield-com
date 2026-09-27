@@ -1,0 +1,759 @@
+openapi: 3.2.0
+info:
+  title: Mandateshield Com Analysis only API
+  version: 3.4.0
+  contact:
+    name: Gökhan Vodinali · MandateShield operator
+    url: https://mandateshield.com/legal
+    email: support@hemelion.com
+  termsOfService: https://mandateshield.com/terms
+  description: 'Operations tagged Analysis only across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://mandateshield.com
+tags:
+- name: Analysis only
+  description: Policy diagnostics that always return enforcement_authorized=false.
+paths:
+  /api/v1/preflight:
+    post:
+      operationId: evaluatePurchase
+      tags:
+      - Analysis only
+      summary: Analyze a purchase against policy boundaries
+      description: Non-executable analysis. This operation always returns enforcement_authorized=false, including for persisted live-key decisions. Do not place it in a payment execution switch.
+      security:
+      - bearerAuth: []
+      - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseEnvelope'
+      responses:
+        '200':
+          description: Analysis completed; never execution authority
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisDecision'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          description: Production access is paused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Sequential or concurrent replay blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisDecision'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '422':
+          description: A live analysis key was used without an active registered mandate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          $ref: '#/components/responses/LegalAcceptanceRequired'
+        '429':
+          description: Anonymous or test allowance exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v1/batch:
+    post:
+      operationId: evaluatePurchaseBatch
+      tags:
+      - Analysis only
+      summary: Analyze 1–25 purchases
+      description: Every item uses v1 and remains non-executable regardless of decision or persistence. Authenticated live items require the account's current business-agreement acceptance and can return LEGAL_ACCEPTANCE_REQUIRED as an item status.
+      security:
+      - bearerAuth: []
+      - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: array
+                minItems: 1
+                maxItems: 25
+                items:
+                  $ref: '#/components/schemas/PurchaseEnvelope'
+              - type: object
+                additionalProperties: false
+                required:
+                - purchases
+                properties:
+                  purchases:
+                    type: array
+                    minItems: 1
+                    maxItems: 25
+                    items:
+                      $ref: '#/components/schemas/PurchaseEnvelope'
+      responses:
+        '200':
+          description: Ordered analysis results
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    servers:
+    - url: https://mandateshield.com
+components:
+  schemas:
+    PreflightDecision:
+      type: object
+      required:
+      - decision
+      - score
+      - receipt
+      - checked_at
+      - protocol
+      - findings
+      - risk
+      - recommended_action
+      - controls
+      - mode
+      - persisted
+      - enforcement_authorized
+      properties:
+        decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        policy_decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Deterministic control-coverage indicator, not a calibrated probability of fraud or loss.
+        receipt:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        checked_at:
+          type: string
+          format: date-time
+        protocol:
+          type: string
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+        risk:
+          $ref: '#/components/schemas/Risk'
+        recommended_action:
+          type: string
+        controls:
+          type: object
+          required:
+          - evaluated
+          - passed
+          properties:
+            evaluated:
+              type: integer
+              minimum: 0
+            passed:
+              type: integer
+              minimum: 0
+        mode:
+          type: string
+          enum:
+          - sandbox
+          - test
+          - live
+          - strict
+        persisted:
+          type: boolean
+        enforcement_authorized:
+          type: boolean
+          description: Always false for v1. In strict v2, true means a short-lived execution reservation committed atomically; an integrating processor must still obtain the single winning CONSUME transition and fresh exact-bound permit claim before an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.
+        mandate:
+          oneOf:
+          - $ref: '#/components/schemas/MandateBinding'
+          - type: 'null'
+    AnalysisDecision:
+      allOf:
+      - $ref: '#/components/schemas/PreflightDecision'
+      - type: object
+        required:
+        - enforcement_authorized
+        properties:
+          enforcement_authorized:
+            const: false
+            description: The v1 analysis profile never authorizes execution.
+    MandateBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - version
+      - policy_hash
+      - source
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        policy_hash:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        source:
+          const: ACCOUNT_REGISTRY
+    PurchaseEnvelope:
+      type: object
+      additionalProperties: true
+      required:
+      - protocol
+      - mandate_id
+      - agent_id
+      - merchant_id
+      - amount
+      - idempotency_key
+      properties:
+        protocol:
+          type: string
+          enum:
+          - AP2
+          - TAP
+          - UCP
+          - X402
+          - MPP
+          - ACP
+          - CUSTOM
+        mandate_id:
+          type: string
+          minLength: 1
+        agent_id:
+          type: string
+          minLength: 1
+        merchant_id:
+          type: string
+          minLength: 1
+        payee_identity:
+          type: object
+          additionalProperties: false
+          required:
+          - profile
+          - provider
+          - merchant_id
+          - binding
+          - verification
+          properties:
+            profile:
+              const: MANDATESHIELD_PAYEE_IDENTITY_V1
+            provider:
+              type: string
+              enum:
+              - X402
+              - MPP
+              - STRIPE
+              - CUSTOM
+            merchant_id:
+              type: string
+              minLength: 1
+              maxLength: 240
+            binding:
+              type: object
+            verification:
+              type: object
+              additionalProperties: false
+              required:
+              - method
+              - verifier
+              - evidence_ref
+              properties:
+                method:
+                  type: string
+                  enum:
+                  - TRUSTED_MERCHANT_MAPPING
+                  - TLS_SERVICE_ORIGIN
+                  - STRIPE_ACCOUNT_CONFIGURATION
+                  - HTTPS_WELL_KNOWN
+                verifier:
+                  type: string
+                  minLength: 1
+                  maxLength: 240
+                evidence_ref:
+                  type: string
+                  minLength: 1
+                  maxLength: 2048
+          oneOf:
+          - properties:
+              provider:
+                const: X402
+              binding:
+                type: object
+                additionalProperties: false
+                required:
+                - network
+                - pay_to
+                properties:
+                  network:
+                    type: string
+                    minLength: 1
+                    maxLength: 240
+                  pay_to:
+                    type: string
+                    minLength: 1
+                    maxLength: 500
+              verification:
+                type: object
+                additionalProperties: false
+                required:
+                - method
+                - verifier
+                - evidence_ref
+                properties:
+                  method:
+                    const: TRUSTED_MERCHANT_MAPPING
+                  verifier:
+                    type: string
+                    minLength: 1
+                    maxLength: 240
+                  evidence_ref:
+                    type: string
+                    minLength: 1
+                    maxLength: 2048
+          - properties:
+              provider:
+                const: MPP
+              binding:
+                type: object
+                additionalProperties: false
+                required:
+                - service_origin
+                - method
+                properties:
+                  service_origin:
+                    type: string
+                    pattern: ^https://[^/?#]+$
+                  method:
+                    type: string
+                    pattern: ^[a-z]+$
+              verification:
+                type: object
+                additionalProperties: false
+                required:
+                - method
+                - verifier
+                - evidence_ref
+                properties:
+                  method:
+                    const: TLS_SERVICE_ORIGIN
+                  verifier:
+                    type: string
+                    minLength: 1
+                    maxLength: 240
+                  evidence_ref:
+                    type: string
+                    minLength: 1
+                    maxLength: 2048
+          - properties:
+              provider:
+                const: STRIPE
+              binding:
+                type: object
+                additionalProperties: false
+                required:
+                - connected_account_id
+                - merchant_account_id
+                properties:
+                  connected_account_id:
+                    type: string
+                    pattern: ^acct_[A-Za-z0-9_]{8,240}$
+                  merchant_account_id:
+                    type: string
+                    pattern: ^acct_[A-Za-z0-9_]{8,240}$
+              verification:
+                type: object
+                additionalProperties: false
+                required:
+                - method
+                - verifier
+                - evidence_ref
+                properties:
+                  method:
+                    const: STRIPE_ACCOUNT_CONFIGURATION
+                  verifier:
+                    type: string
+                    minLength: 1
+                    maxLength: 240
+                  evidence_ref:
+                    type: string
+                    pattern: ^urn:stripe:connected-account:acct_[A-Za-z0-9_]{8,240}$
+          - properties:
+              provider:
+                const: CUSTOM
+              binding:
+                type: object
+                additionalProperties: false
+                required:
+                - service_origin
+                - provider_id
+                properties:
+                  service_origin:
+                    type: string
+                    pattern: ^https://[^/?#]+$
+                  provider_id:
+                    type: string
+                    minLength: 1
+                    maxLength: 240
+              verification:
+                type: object
+                additionalProperties: false
+                required:
+                - method
+                - verifier
+                - evidence_ref
+                properties:
+                  method:
+                    const: HTTPS_WELL_KNOWN
+                  verifier:
+                    type: string
+                    minLength: 1
+                    maxLength: 240
+                  evidence_ref:
+                    type: string
+                    format: uri
+                    pattern: ^https://[^/?#]+/\.well-known/mandateshield-payee\.json$
+          description: Versioned canonical payee identity bound into the signed purchase envelope. The model records exact provider identifiers and verification evidence; it does not independently validate an external registry, TLS session, provider account or domain-control document.
+        amount:
+          type: object
+          additionalProperties: false
+          oneOf:
+          - required:
+            - value
+            - currency
+          - required:
+            - atomic_units
+            - asset_decimals
+          properties:
+            value:
+              type: number
+              exclusiveMinimum: 0
+            minor_units:
+              type: integer
+              description: Optional exact integer minor-unit amount. Must agree with value.
+            currency:
+              type: string
+              pattern: ^[A-Za-z]{3}$
+              description: Current ISO 4217 code with numeric minor units.
+            atomic_units:
+              type: string
+              pattern: ^(?:0|[1-9][0-9]{0,77})$
+              description: Exact canonical atomic-asset integer string. It is authoritative for X402 and compared to the registered cap with BigInt semantics; never send a JSON number, decimal, sign or exponent.
+            asset_decimals:
+              type: integer
+              minimum: 0
+              maximum: 30
+              description: Exact asset exponent from 0 through 30. For X402 it must equal the registered mandate value; it is not inferred from atomic_units.
+        limits:
+          type: object
+          additionalProperties: true
+          description: Sandbox analysis policy only. Live v2 ignores caller-supplied limits and injects the active registered mandate.
+          properties:
+            max_amount:
+              type: number
+              exclusiveMinimum: 0
+              description: Analysis convenience field in major units.
+            max_amount_minor:
+              type: integer
+              exclusiveMinimum: 0
+              description: Exact registered production ceiling in currency minor units.
+            max_atomic_units:
+              type: string
+              pattern: ^[1-9][0-9]{0,77}$
+              description: Exact positive canonical atomic-unit ceiling. Production obtains this string from the registered mandate and compares it without floating-point conversion.
+            asset_decimals:
+              type: integer
+              minimum: 0
+              maximum: 30
+              description: Registered atomic-asset exponent; the request must match it exactly.
+            currencies:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                pattern: ^[A-Za-z]{3}$
+            merchants:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                minLength: 1
+            assets:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                minLength: 1
+              description: Exact allowed asset identifiers for sandbox analysis.
+            networks:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                minLength: 1
+              description: Exact allowed network identifiers for sandbox analysis.
+            resources:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                minLength: 1
+              description: Exact allowed paid-resource identifiers for sandbox analysis.
+          oneOf:
+          - required:
+            - currencies
+            - merchants
+            anyOf:
+            - required:
+              - max_amount_minor
+            - required:
+              - max_amount
+          - required:
+            - max_atomic_units
+            - asset_decimals
+            - assets
+            - networks
+            - resources
+            - merchants
+        asset_id:
+          type: string
+          minLength: 1
+          description: Exact token or asset identifier. Required for X402 and matched byte-for-byte to the registered mandate after surrounding whitespace is removed.
+        network:
+          type: string
+          minLength: 1
+          description: Exact network or chain identifier. Required for X402 and matched to the registered mandate.
+        resource:
+          type: string
+          minLength: 1
+          description: Exact paid-resource identifier. Required for X402 and matched to the registered mandate; a different path or resource is a substitution.
+        http_request:
+          type: object
+          additionalProperties: false
+          required:
+          - profile
+          - url
+          - method
+          - body_sha256
+          - headers_sha256
+          - redirect_policy
+          properties:
+            profile:
+              const: MANDATESHIELD_X402_V2_EXACT_EIP3009_V1
+            url:
+              type: string
+              format: uri
+            method:
+              type: string
+              enum:
+              - GET
+              - HEAD
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+            body_sha256:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            headers_sha256:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            redirect_policy:
+              const: ERROR
+          description: Optional signed HTTP action projection used by the narrow first-party x402 v2 exact/EIP-3009 Gate adapter.
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        idempotency_key:
+          type: string
+          minLength: 1
+          maxLength: 256
+          pattern: ^[A-Za-z0-9._:~-]+$
+        intent_hash:
+          type: string
+        checkout_hash:
+          type: string
+          minLength: 1
+          description: Digest or stable identifier for the exact final checkout. Required by the strict AP2 closed-payment projection.
+        user_consent:
+          type: boolean
+        credential_binding:
+          type: string
+        purpose:
+          type: string
+      description: Normalized purchase facts for policy and authority verification. For X402 this is a pre-payment verification projection, not an x402 challenge, signed payment payload, facilitator submission or settlement instruction.
+      allOf:
+      - if:
+          properties:
+            protocol:
+              const: X402
+          required:
+          - protocol
+        then:
+          required:
+          - asset_id
+          - network
+          - resource
+          properties:
+            amount:
+              required:
+              - atomic_units
+              - asset_decimals
+    Finding:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - message
+      - severity
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum:
+          - high
+          - medium
+          - low
+    Risk:
+      type: object
+      required:
+      - level
+      - requested_value
+      - mandate_headroom
+      - blocked_value
+      - primary_reason
+      properties:
+        level:
+          type: string
+          enum:
+          - CLEAR
+          - GUARDED
+          - ELEVATED
+          - CRITICAL
+        requested_value:
+          type:
+          - number
+          - 'null'
+        mandate_headroom:
+          type:
+          - number
+          - 'null'
+        blocked_value:
+          type: number
+          minimum: 0
+        primary_reason:
+          type:
+          - string
+          - 'null'
+    LegalAcceptanceRequiredError:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - code
+      - terms_version
+      - acceptance_url
+      properties:
+        error:
+          type: string
+        code:
+          const: LEGAL_ACCEPTANCE_REQUIRED
+        terms_version:
+          type: string
+          const: 2026-07-28.2
+        acceptance_url:
+          type: string
+          format: uri
+          const: https://mandateshield.com/dashboard?legal=required
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+  responses:
+    LegalAcceptanceRequired:
+      description: The authenticated live account has not accepted the current business agreements
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
+    Unauthorized:
+      description: API key is missing, invalid or revoked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Invalid JSON, shape or parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooLarge:
+      description: Request exceeds the endpoint size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    hostingSession:
+      type: apiKey
+      in: header
+      name: OAI-Authenticated-User-Email
+      description: Hosting-injected authenticated account-owner identity. The hosting boundary validates the user session and injects this assertion; callers cannot authenticate by supplying this header directly. State-changing control-plane requests additionally require the trusted same-origin check documented by the operation.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: ms_test_… or ms_live_…
+      description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
+x-refined-from:
+- mandateshield-com-openapi.json
+- mandateshield-com-openapi.yml
+x-mandateshield-release:
+  product_version: 1.13.0
+  openapi_version: 3.4.0
+  standard_version: 2.4.0
+  released_at: '2026-07-28T14:25:22.000Z'
+  generated_at: '2026-07-28T14:25:22.000Z'
+  status: current
+  latest_pointer: https://mandateshield.com/current-release.json
+  superseded_by: null
+  canonical_versioned_documents:
+    openapi: https://mandateshield.com/openapi/3.4.0.json
+    llms: https://mandateshield.com/llms/1.13.0.txt
+    llms_full: https://mandateshield.com/llms-full/1.13.0.txt
+    discovery: https://mandateshield.com/discovery/1.13.0.json

@@ -1,0 +1,55 @@
+openapi: 3.2.0
+info:
+  title: Mandateshield Com Preflight API
+  version: 3.4.0
+  contact:
+    name: Gökhan Vodinali · MandateShield operator
+    url: https://mandateshield.com/legal
+    email: support@hemelion.com
+  termsOfService: https://mandateshield.com/terms
+  description: 'Operations tagged Preflight across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://mandateshield.com
+tags:
+- name: Preflight
+paths:
+  /api/v1/preflight:
+    options:
+      operationId: preflightOptions
+      summary: Inspect CORS support
+      responses:
+        '204':
+          description: CORS pre-flight accepted
+      tags:
+      - Preflight
+    servers:
+    - url: https://mandateshield.com
+components:
+  securitySchemes:
+    hostingSession:
+      type: apiKey
+      in: header
+      name: OAI-Authenticated-User-Email
+      description: Hosting-injected authenticated account-owner identity. The hosting boundary validates the user session and injects this assertion; callers cannot authenticate by supplying this header directly. State-changing control-plane requests additionally require the trusted same-origin check documented by the operation.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: ms_test_… or ms_live_…
+      description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
+x-refined-from:
+- mandateshield-com-openapi.json
+- mandateshield-com-openapi.yml
+x-mandateshield-release:
+  product_version: 1.13.0
+  openapi_version: 3.4.0
+  standard_version: 2.4.0
+  released_at: '2026-07-28T14:25:22.000Z'
+  generated_at: '2026-07-28T14:25:22.000Z'
+  status: current
+  latest_pointer: https://mandateshield.com/current-release.json
+  superseded_by: null
+  canonical_versioned_documents:
+    openapi: https://mandateshield.com/openapi/3.4.0.json
+    llms: https://mandateshield.com/llms/1.13.0.txt
+    llms_full: https://mandateshield.com/llms-full/1.13.0.txt
+    discovery: https://mandateshield.com/discovery/1.13.0.json

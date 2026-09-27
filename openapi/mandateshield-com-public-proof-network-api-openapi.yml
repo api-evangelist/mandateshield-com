@@ -1,0 +1,751 @@
+openapi: 3.2.0
+info:
+  title: Mandateshield Com Public proof network API
+  version: 3.4.0
+  contact:
+    name: Gökhan Vodinali · MandateShield operator
+    url: https://mandateshield.com/legal
+    email: support@hemelion.com
+  termsOfService: https://mandateshield.com/terms
+  description: 'Operations tagged Public proof network across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://mandateshield.com
+tags:
+- name: Public proof network
+  description: Signed externally bound self-reports. MandateShield verifies domain or exact GitHub-commit binding and claimant-report integrity; it does not run the claimant implementation, independently verify conformance, count entries as users or installations, or issue certification.
+  externalDocs:
+    url: https://mandateshield.com/specifications/proof-attestation/v1
+paths:
+  /api/v1/proof-network/challenges:
+    post:
+      operationId: createPublicProofChallenge
+      tags:
+      - Public proof network
+      summary: Create an external-subject binding challenge
+      description: Accepts a complete claimant-supplied report for the current executable offline vectors plus an HTTPS-domain or public GitHub-repository subject. MandateShield checks that the reported decisions and findings match the published profile, then signs a 24-hour DNS-TXT or exact GitHub-commit binding challenge. It does not execute the claimant implementation or independently verify the conformance run. Do not send an API key or production credential.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProofChallengeRequest'
+      responses:
+        '201':
+          description: Signed non-authorizing external-binding challenge
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProofChallenge'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '422':
+          description: Claimant-supplied outputs do not match the published offline profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Proof challenge rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Proof challenge signing unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v1/proof-network/attestations:
+    post:
+      operationId: issuePublicProofAttestation
+      tags:
+      - Public proof network
+      summary: Bind and sign one claimant self-report
+      description: 'Requires publisher_terms_accepted=true, then verifies the signed challenge and either DNS TXT control or the exact binding document in a specified public GitHub repository commit and persists a signed EXTERNALLY_BOUND_SELF_REPORT. The publisher confirms subject control, publication rights and the correction, expiry, revocation and takedown rules in the Acceptable Use Policy. Subject binding and report integrity are verified. Claimant execution remains SELF_REPORTED_OUTPUTS_ONLY: the result is non-authorizing, is not an independently executed conformance result, audit or certification, and does not count as a user, customer or installation. Hosted MandateShield sandbox runs cannot enter this network.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicProofAttestationRequest'
+      responses:
+        '200':
+          description: Existing idempotent proof returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProofAttestation'
+        '201':
+          description: Externally bound self-report created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProofAttestation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: The signed challenge was already finalized for a conflicting binding
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '428':
+          $ref: '#/components/responses/PublisherTermsRequired'
+        '429':
+          description: Proof attestation rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Binding verification or persistence unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v1/proof-network/proofs:
+    get:
+      operationId: listPublicProofAttestations
+      tags:
+      - Public proof network
+      summary: List externally bound self-report summaries
+      description: Returns up to 50 signed proof summaries. Every entry is an externally bound self-report, not a user, customer, installation, independent conformance result, audit or certification. Client telemetry and hosted sandbox runs are excluded.
+      security: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+      responses:
+        '200':
+          description: Bounded list with explicit non-user semantics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProofNetworkList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          description: Proof network temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v1/proof-network/proofs/{proofId}:
+    get:
+      operationId: getPublicProofAttestation
+      tags:
+      - Public proof network
+      summary: Get one full signed self-report
+      description: Returns the external subject binding, claimant-supplied report, signed attestation, badge and explicit caveat. Binding verification does not establish independently executed conformance, production use, user identity, audit or certification.
+      security: []
+      parameters:
+      - name: proofId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+      responses:
+        '200':
+          description: Full signed externally bound self-report
+          content:
+            application/mandateshield-proof-attestation+json:
+              schema:
+                $ref: '#/components/schemas/PublicProofAttestation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: No externally bound proof has this identifier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Proof network temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v1/proof-network/proofs/{proofId}/badge.svg:
+    get:
+      operationId: getPublicProofBadge
+      tags:
+      - Public proof network
+      summary: Get an explicitly labeled self-report badge
+      description: Returns an SVG labeled “externally bound self-report.” The badge links to proof caveats and is not a certification, audit, user count or independent conformance mark.
+      security: []
+      parameters:
+      - name: proofId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+      responses:
+        '200':
+          description: Externally bound self-report SVG badge
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Proof not found
+          content:
+            text/plain:
+              schema:
+                type: string
+        '503':
+          description: Proof network temporarily unavailable
+          content:
+            text/plain:
+              schema:
+                type: string
+    servers:
+    - url: https://mandateshield.com
+components:
+  schemas:
+    PublicProofChallenge:
+      type: object
+      additionalProperties: false
+      required:
+      - format
+      - challenge_id
+      - challenge_token
+      - challenge_digest
+      - expires_at
+      - subject
+      - report_digest
+      - required_proof
+      - assurance
+      properties:
+        format:
+          const: application/mandateshield-proof-challenge+jwt
+        challenge_id:
+          type: string
+          pattern: ^mspc_[a-f0-9]{32}$
+        challenge_token:
+          type: string
+          minLength: 1
+        challenge_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        expires_at:
+          type: string
+          format: date-time
+        subject:
+          type: object
+          additionalProperties: true
+        report_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        required_proof:
+          type: object
+          additionalProperties: true
+          required:
+          - method
+          - verifies
+          properties:
+            method:
+              type: string
+              enum:
+              - DNS_TXT_CONTROL
+              - GITHUB_COMMIT_FILE
+            repository_commit_requirement:
+              type: string
+              const: CURRENT_DEFAULT_BRANCH_HEAD
+              description: Present for GitHub repository challenges. The supplied commit must equal the claimed repository's current default-branch HEAD at verification time.
+            verifies:
+              type: string
+        assurance:
+          type: object
+          additionalProperties: false
+          required:
+          - challenge_persisted
+          - pseudonymous_abuse_counters_only
+          - client_telemetry_counted_as_users
+          - conformance_execution_verified
+          - certification
+          - non_authorizing
+          properties:
+            challenge_persisted:
+              const: false
+            pseudonymous_abuse_counters_only:
+              const: true
+            client_telemetry_counted_as_users:
+              const: false
+            conformance_execution_verified:
+              const: false
+            certification:
+              const: false
+            non_authorizing:
+              const: true
+    PublicProofConformanceReport:
+      type: object
+      additionalProperties: false
+      required:
+      - format
+      - profile
+      - profile_version
+      - scope
+      - runner
+      - executed_at
+      - results
+      properties:
+        format:
+          const: application/mandateshield-conformance-report+json;v=1
+        profile:
+          const: https://mandateshield.com/conformance/v1
+        profile_version:
+          const: 1.0.0
+        scope:
+          const: OFFLINE_POLICY_VECTORS
+        runner:
+          type: object
+          additionalProperties: false
+          required:
+          - name
+          - version
+          properties:
+            name:
+              type: string
+              minLength: 1
+              maxLength: 80
+            version:
+              type: string
+              minLength: 1
+              maxLength: 40
+        executed_at:
+          type: string
+          format: date-time
+        results:
+          type: array
+          minItems: 8
+          maxItems: 8
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - vector_id
+            - actual_decision
+            - actual_finding_codes
+            properties:
+              vector_id:
+                type: string
+                enum:
+                - fiat-usd-exact-minor-units
+                - fiat-conflicting-minor-units
+                - fiat-jpy-fractional-major-unit
+                - x402-exact-beyond-safe-integer
+                - x402-one-unit-over-cap
+                - x402-resource-substitution
+                - strict-unknown-constraint-field
+                - replay-key-invalid-characters
+              actual_decision:
+                type: string
+                enum:
+                - ALLOW
+                - REVIEW
+                - BLOCK
+              actual_finding_codes:
+                type: array
+                maxItems: 64
+                uniqueItems: true
+                items:
+                  type: string
+                  pattern: ^[A-Z][A-Z0-9_]{0,79}$
+    PublicProofSummary:
+      type: object
+      additionalProperties: true
+      required:
+      - proof_id
+      - attestation_type
+      - subject
+      - binding
+      - conformance
+      - hosted_sandbox
+      - counts_as_user
+      - issued_at
+      - proof_uri
+      - badge
+      properties:
+        proof_id:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+        attestation_type:
+          const: EXTERNALLY_BOUND_SELF_REPORT
+        subject:
+          type: object
+          additionalProperties: true
+        binding:
+          type: object
+          additionalProperties: true
+        conformance:
+          type: object
+          additionalProperties: true
+          required:
+          - result_verification
+          - independently_verified
+          - third_party_conformance
+          - certification
+          properties:
+            result_verification:
+              const: SELF_REPORTED_OUTPUTS_ONLY
+            independently_verified:
+              const: false
+            third_party_conformance:
+              const: false
+            certification:
+              const: false
+        hosted_sandbox:
+          const: false
+        counts_as_user:
+          const: false
+        issued_at:
+          type: string
+          format: date-time
+        proof_uri:
+          type: string
+          format: uri
+        badge:
+          type: object
+          additionalProperties: true
+    PublicProofSubjectInput:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+        - kind
+        - uri
+        properties:
+          kind:
+            const: https-domain
+          uri:
+            type: string
+            format: uri
+            pattern: ^https://
+            maxLength: 512
+      - type: object
+        additionalProperties: false
+        required:
+        - kind
+        - uri
+        properties:
+          kind:
+            const: github-repository
+          uri:
+            type: string
+            format: uri
+            pattern: ^https://github\.com/[^/]+/[^/]+/?$
+            maxLength: 512
+    PublisherTermsRequiredError:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - code
+      properties:
+        error:
+          type: string
+        code:
+          const: PUBLISHER_TERMS_REQUIRED
+    PublicProofNetworkList:
+      type: object
+      additionalProperties: false
+      required:
+      - format
+      - status
+      - proofs
+      - semantics
+      - caveat
+      properties:
+        format:
+          const: application/mandateshield-proof-network+json;v=1
+        status:
+          type: string
+          enum:
+          - EMPTY
+          - ACTIVE
+        proofs:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PublicProofSummary'
+        semantics:
+          type: object
+          additionalProperties: false
+          required:
+          - entries_are_users
+          - entries_are_installations
+          - client_telemetry_included
+          - hosted_sandbox_included
+          - independent_conformance_claimed
+          properties:
+            entries_are_users:
+              const: false
+            entries_are_installations:
+              const: false
+            client_telemetry_included:
+              const: false
+            hosted_sandbox_included:
+              const: false
+            independent_conformance_claimed:
+              const: false
+        caveat:
+          type: string
+          description: Every entry is an externally bound self-report, not a customer, user, installation, certification or independently executed conformance result.
+    PublicProofAttestation:
+      type: object
+      additionalProperties: true
+      required:
+      - format
+      - proof_id
+      - attestation_type
+      - issuer_role
+      - subject
+      - binding
+      - conformance
+      - hosted_sandbox
+      - non_authorizing
+      - counts_as_user
+      - issued_at
+      - proof_uri
+      - badge
+      - signed_attestation
+      - caveat
+      properties:
+        format:
+          const: application/mandateshield-proof-attestation+json
+        proof_id:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+        attestation_type:
+          const: EXTERNALLY_BOUND_SELF_REPORT
+        issuer_role:
+          const: BINDING_NOTARY
+        subject:
+          type: object
+          additionalProperties: true
+        binding:
+          type: object
+          additionalProperties: true
+          required:
+          - method
+          - evidence_digest
+          - verified_at
+          - https_endpoint_checked
+          properties:
+            method:
+              type: string
+              enum:
+              - DNS_TXT_CONTROL
+              - GITHUB_COMMIT_FILE
+            evidence_digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            verified_at:
+              type: string
+              format: date-time
+            https_endpoint_checked:
+              const: false
+        conformance:
+          type: object
+          additionalProperties: true
+          required:
+          - profile
+          - profile_version
+          - coverage
+          - report_digest
+          - reported_outcome
+          - result_verification
+          - conformance_execution_verified
+          - independently_verified
+          - third_party_conformance
+          - certification
+          properties:
+            profile:
+              const: https://mandateshield.com/conformance/v1
+            profile_version:
+              const: 1.0.0
+            coverage:
+              const: OFFLINE_POLICY_VECTORS
+            report_digest:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            reported_outcome:
+              const: PASS
+            result_verification:
+              const: SELF_REPORTED_OUTPUTS_ONLY
+            conformance_execution_verified:
+              const: false
+            independently_verified:
+              const: false
+            third_party_conformance:
+              const: false
+            certification:
+              const: false
+        hosted_sandbox:
+          const: false
+        non_authorizing:
+          const: true
+        counts_as_user:
+          const: false
+        issued_at:
+          type: string
+          format: date-time
+        proof_uri:
+          type: string
+          format: uri
+        badge:
+          type: object
+          additionalProperties: false
+          required:
+          - url
+          - alt
+          - markdown
+          properties:
+            url:
+              type: string
+              format: uri
+            alt:
+              type: string
+            markdown:
+              type: string
+        signed_attestation:
+          type: object
+          additionalProperties: false
+          required:
+          - format
+          - compact
+          - compact_hash
+          - key_id
+          - jwks_uri
+          properties:
+            format:
+              const: application/mandateshield-proof-attestation+jwt
+            compact:
+              type: string
+              minLength: 1
+            compact_hash:
+              type: string
+              pattern: ^sha256:[a-f0-9]{64}$
+            key_id:
+              type: string
+              minLength: 1
+            jwks_uri:
+              const: https://mandateshield.com/.well-known/jwks.json
+        caveat:
+          type: string
+          description: Must state that MandateShield verified external subject binding and report integrity only, not claimant execution, certification, audit or real-world use.
+        persisted:
+          type: boolean
+        created:
+          type: boolean
+    PublicProofAttestationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - challenge_token
+      - publisher_terms_accepted
+      properties:
+        challenge_token:
+          type: string
+          minLength: 1
+          maxLength: 64000
+        repository_commit:
+          type: string
+          pattern: ^[a-fA-F0-9]{40}$
+          description: Required only for a GitHub-repository challenge, forbidden for an HTTPS-domain challenge, and required to equal the claimed repository's current default-branch HEAD at verification time.
+        publisher_terms_accepted:
+          const: true
+          description: Required affirmative acceptance of subject-control, publication-rights, correction, expiry, revocation and takedown rules.
+    PublicProofChallengeRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - subject
+      - report
+      properties:
+        subject:
+          $ref: '#/components/schemas/PublicProofSubjectInput'
+        report:
+          $ref: '#/components/schemas/PublicProofConformanceReport'
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+  responses:
+    BadRequest:
+      description: Invalid JSON, shape or parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    PublisherTermsRequired:
+      description: The publisher did not affirmatively accept the public-proof publication rules
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PublisherTermsRequiredError'
+    TooLarge:
+      description: Request exceeds the endpoint size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    hostingSession:
+      type: apiKey
+      in: header
+      name: OAI-Authenticated-User-Email
+      description: Hosting-injected authenticated account-owner identity. The hosting boundary validates the user session and injects this assertion; callers cannot authenticate by supplying this header directly. State-changing control-plane requests additionally require the trusted same-origin check documented by the operation.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: ms_test_… or ms_live_…
+      description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
+x-refined-from:
+- mandateshield-com-openapi.json
+- mandateshield-com-openapi.yml
+x-mandateshield-release:
+  product_version: 1.13.0
+  openapi_version: 3.4.0
+  standard_version: 2.4.0
+  released_at: '2026-07-28T14:25:22.000Z'
+  generated_at: '2026-07-28T14:25:22.000Z'
+  status: current
+  latest_pointer: https://mandateshield.com/current-release.json
+  superseded_by: null
+  canonical_versioned_documents:
+    openapi: https://mandateshield.com/openapi/3.4.0.json
+    llms: https://mandateshield.com/llms/1.13.0.txt
+    llms_full: https://mandateshield.com/llms-full/1.13.0.txt
+    discovery: https://mandateshield.com/discovery/1.13.0.json

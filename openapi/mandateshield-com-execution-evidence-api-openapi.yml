@@ -1,0 +1,978 @@
+openapi: 3.2.0
+info:
+  title: Mandateshield Com Execution evidence API
+  version: 3.4.0
+  contact:
+    name: Gökhan Vodinali · MandateShield operator
+    url: https://mandateshield.com/legal
+    email: support@hemelion.com
+  termsOfService: https://mandateshield.com/terms
+  description: 'Operations tagged Execution evidence across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://mandateshield.com
+tags:
+- name: Execution evidence
+  description: Provider-bound permit redemption, caller observation intake, Stripe API or x402 chain reconciliation that does not trust the caller assertion, autonomous terminal authorization finalization and signed execution-evidence verification.
+paths:
+  /api/v2/execution-permits/verify:
+    post:
+      operationId: verifyExecutionPermit
+      tags:
+      - Execution evidence
+      summary: Verify a signed provider-bound execution permit
+      description: Performs cryptographic and structural verification of one MSP+JWT permit and, when supplied, exact audience matching. This stateless verifier cannot observe issuance state, prior redemption, revocation or concurrent use. It is advisory only and always returns provider_submission_permitted=false and one_use_enforced=false. A provider or facilitator must use the authenticated atomic redemption endpoint before submission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionPermitVerificationRequest'
+      responses:
+        '200':
+          description: Permit signature, exact profile and supplied audience context are valid; no provider submission is authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionPermitVerification'
+        '400':
+          description: Permit is absent, malformed, expired, structurally invalid or fails the supplied audience context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+    servers:
+    - url: https://mandateshield.com
+  /api/v2/execution-permits/redeem:
+    post:
+      operationId: redeemExecutionPermit
+      tags:
+      - Execution evidence
+      summary: Atomically claim one provider-bound execution permit
+      description: Authenticated credential-isolated executor primitive. Requires a paid live PROCESSOR bearer credential whose exact processor_audience equals the permit aud claim and a RUNNING account-wide execution interlock in the same atomic transaction. The compact permit and exact provider, payee, amount and resource request are revalidated against the stored issuance record. Exactly one fresh atomic ISSUED-to-CLAIMED transition returns provider_submission_permitted=true. This proves only a single winner in MandateShield state; it neither calls the provider nor guarantees exactly-once provider delivery. A customer-deployed exclusive executor may then attempt the exact provider request with the signed provider idempotency key. An exact idempotent replay reports the same claim with provider_submission_permitted=false; another claim conflicts. Supply Idempotency-Key in the header or idempotency_key in the body. If both are present they must be byte-identical. A caller must fail closed on timeout or ambiguity. This contract does not claim PSP/provider adoption or provider enforcement.
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        required: false
+        description: Transition idempotency key. Required here or as the identical body idempotency_key.
+        schema:
+          type: string
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionPermitRedemptionRequest'
+      responses:
+        '200':
+          description: Fresh atomic claim or exact non-authorizing idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionPermitRedemptionResult'
+        '400':
+          description: Malformed permit, request binding or mismatched header/body idempotency keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Credential scope, exact audience or signed provider-request binding does not match
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Permit was already claimed by another idempotency domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '410':
+          description: Permit expired or its execution authorization is no longer active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '423':
+          description: Fresh redemption was withheld by the account-wide execution interlock; an exact already-claimed replay remains non-authorizing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '428':
+          $ref: '#/components/responses/LegalAcceptanceRequired'
+        '503':
+          description: Atomic redemption state is unavailable or ambiguous; no provider submission is permitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v2/provider-submissions:
+    post:
+      operationId: reportProviderSubmission
+      tags:
+      - Execution evidence
+      summary: Record one provider attempt and reconcile its outcome without trusting the…
+      description: Requires the live PROCESSOR credential bound to the exact permit audience. The caller reports the stable ProviderSubmission, permit claim, provider payment reference, observation time and one bounded provider observation. That report is persisted only as CALLER_ASSERTED evidence. MandateShield then reads the bound Stripe PaymentIntent through the account's encrypted restricted-key connection or verifies the exact x402 transaction and canonical finalized chain evidence without trusting that report. Stripe verification reconstructs the permit-bound URL-encoded request-body digest and checks amount, received amount, currency, PaymentMethod, capture and confirmation modes, card method, provider request ID and canonical payee metadata; substitutions conflict and remain nonterminal. Only a matching PROVIDER_API_VERIFIED or CHAIN_FINALIZED terminal result permits autonomous COMMIT or RELEASE. Pending, unavailable, contradictory or unknown results return HTTP 202, remain fail-closed and are retried by the durable reconciliation worker. A caller observation, provider webhook or HTTP 200 alone never establishes terminal settlement. This caller-independent check is not an external audit or independent-organization certification.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderSubmissionReportRequest'
+      responses:
+        '200':
+          description: Terminal provider evidence checked without trusting the caller was recorded and is eligible for autonomous authorization finalization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderSubmissionReportResult'
+        '202':
+          description: The observation was recorded but no terminal outcome checked without trusting the caller exists; reconciliation remains required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderSubmissionReportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: A paid live PROCESSOR key for the exact audience is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Submission, permit, claim, audience, payment reference or terminal replay binding conflicts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '503':
+          description: The caller observation could not be durably recorded or reconciliation state is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v2/provider-webhooks/stripe/{connectionId}:
+    post:
+      operationId: receiveStripeProviderWebhook
+      tags:
+      - Execution evidence
+      summary: Authenticate a Stripe event and trigger caller-independent reconciliation
+      description: 'Validates the bounded raw request body with the active connection''s Stripe webhook secret, enforces timestamp tolerance and deduplicates the Stripe event ID. The webhook remains an authenticated scheduling hint rather than settlement proof: MandateShield performs a separate Stripe API lookup and exact account, environment, PaymentIntent, amount, received amount, currency, PaymentMethod, capture and confirmation modes, card method, merchant, receipt, request-ID, payee metadata and permit-body-digest binding before terminal evidence can be verified.'
+      parameters:
+      - in: path
+        name: connectionId
+        required: true
+        schema:
+          type: string
+          pattern: ^pcn_[a-f0-9]{32}$
+      - in: header
+        name: Stripe-Signature
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 4096
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Bounded Stripe Event JSON. Its signature is checked over the exact raw bytes before parsing.
+      responses:
+        '200':
+          description: The signed event was accepted, deduplicated if necessary, and reconciliation completed or remains pending
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                - received
+                - relevant
+                properties:
+                  received:
+                    const: true
+                  relevant:
+                    type: boolean
+                  idempotent_replay:
+                    type: boolean
+                  reconciliation:
+                    type: object
+                  reconciliation_pending:
+                    const: true
+        '400':
+          description: The request, raw event body, Stripe signature or event binding is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No active Stripe connection matches connectionId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: The signed event conflicts with the bound submission, permit or PaymentIntent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '503':
+          description: Durable webhook evidence or reconciliation state is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    servers:
+    - url: https://mandateshield.com
+  /api/v2/execution-receipts/verify:
+    post:
+      operationId: verifyExecutionReceipt
+      tags:
+      - Execution evidence
+      summary: Verify a signed terminal execution receipt
+      description: Verifies an MSE+JWT signature, exact historical execution-evidence profile, strict terminal transition bindings and, when supplied, exact audience equality. The artifact is historical_evidence_only and execution_authorized=false. CALLER_ASSERTED, UNRESOLVED and LEDGER_DERIVED receipts set the legacy field independent_verification=false. Current hosted Stripe and x402 profiles set it true only after MandateShield checks PROVIDER_API_VERIFIED or CHAIN_FINALIZED evidence without trusting the caller report. FACILITATOR_SIGNED is retained for separately configured integrations and does not imply provider adoption. The field does not claim an independent organization, audit or certification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionReceiptVerificationRequest'
+      responses:
+        '200':
+          description: Terminal execution receipt signature, structure and supplied audience context are valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionReceiptVerification'
+        '400':
+          description: Execution receipt is absent, malformed or fails the supplied audience context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+    servers:
+    - url: https://mandateshield.com
+components:
+  schemas:
+    ProviderSubmissionId:
+      type: string
+      pattern: ^psub_[a-f0-9]{32}$
+    ExecutionReceiptClaims:
+      $ref: https://mandateshield.com/schemas/execution-receipt-v1.json
+    ExecutionPermitRedemptionRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - compact
+      - expected_request
+      properties:
+        compact:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        expected_request:
+          $ref: '#/components/schemas/ExecutionExpectedRequest'
+        idempotency_key:
+          type: string
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+          description: Required when Idempotency-Key is absent; must be identical when both forms are supplied.
+    ExecutionReceiptVerificationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - compact
+      properties:
+        compact:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        expected_audience:
+          type: string
+          minLength: 1
+          maxLength: 240
+    ProviderSubmissionReportResult:
+      type: object
+      additionalProperties: false
+      required:
+      - provider_submission_id
+      - permit_id
+      - state
+      - payment_reference
+      - caller_evidence_recorded
+      - independent_verification
+      - evidence_class
+      - evidence_id
+      - outcome
+      - terminal_transition_permitted
+      - reconciliation_required
+      - idempotent_replay
+      - authorization_finalized
+      - final_authorization_state
+      - execution_receipt
+      properties:
+        provider_submission_id:
+          $ref: '#/components/schemas/ProviderSubmissionId'
+        permit_id:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+        state:
+          $ref: '#/components/schemas/ProviderSubmissionState'
+        payment_reference:
+          type: string
+          minLength: 1
+          maxLength: 240
+        caller_evidence_recorded:
+          const: true
+        independent_verification:
+          type: boolean
+          description: Legacy field name. True means MandateShield checked configured evidence without trusting the caller report; it does not mean verification by an independent organization, audit, certification, or provider adoption.
+        evidence_class:
+          $ref: '#/components/schemas/ProviderEvidenceClass'
+        evidence_id:
+          $ref: '#/components/schemas/ProviderEvidenceId'
+        outcome:
+          type: string
+          enum:
+          - COMMITTED
+          - FAILED_CONFIRMED
+          - UNKNOWN
+        terminal_transition_permitted:
+          type: boolean
+        reconciliation_required:
+          type: boolean
+        idempotent_replay:
+          type: boolean
+        authorization_finalized:
+          type: boolean
+        final_authorization_state:
+          type:
+          - string
+          - 'null'
+          enum:
+          - COMMITTED
+          - RELEASED
+          - null
+        execution_receipt:
+          oneOf:
+          - $ref: '#/components/schemas/SignedExecutionReceipt'
+          - type: 'null'
+      allOf:
+      - if:
+          properties:
+            terminal_transition_permitted:
+              const: true
+          required:
+          - terminal_transition_permitted
+        then:
+          properties:
+            independent_verification:
+              const: true
+            reconciliation_required:
+              const: false
+            evidence_class:
+              enum:
+              - FACILITATOR_SIGNED
+              - PROVIDER_API_VERIFIED
+              - CHAIN_FINALIZED
+            outcome:
+              enum:
+              - COMMITTED
+              - FAILED_CONFIRMED
+        else:
+          properties:
+            independent_verification:
+              const: false
+            reconciliation_required:
+              const: true
+            outcome:
+              const: UNKNOWN
+      - if:
+          properties:
+            authorization_finalized:
+              const: true
+          required:
+          - authorization_finalized
+        then:
+          properties:
+            final_authorization_state:
+              enum:
+              - COMMITTED
+              - RELEASED
+            execution_receipt:
+              $ref: '#/components/schemas/SignedExecutionReceipt'
+        else:
+          properties:
+            final_authorization_state:
+              type: 'null'
+            execution_receipt:
+              type: 'null'
+    ProviderEvidenceId:
+      type: string
+      pattern: ^pevd_[a-f0-9]{32}$
+    ExecutionReceiptVerification:
+      type: object
+      additionalProperties: false
+      required:
+      - cryptographically_valid
+      - context_matched
+      - protected_header
+      - claims
+      - historical_evidence_only
+      - execution_authorized
+      - independent_verification
+      properties:
+        cryptographically_valid:
+          const: true
+        context_matched:
+          type: boolean
+          description: True only when expected_audience was supplied and matched exactly.
+        protected_header:
+          $ref: '#/components/schemas/ExecutionReceiptProtectedHeader'
+        claims:
+          $ref: '#/components/schemas/ExecutionReceiptClaims'
+        historical_evidence_only:
+          const: true
+        execution_authorized:
+          const: false
+        independent_verification:
+          type: boolean
+          description: Matches the legacy claims.independent_verification field. True means MandateShield checked configured evidence without trusting the caller report; it does not mean verification by an independent organization, audit, or certification.
+    ExecutionPermitProtectedHeader:
+      type: object
+      additionalProperties: false
+      required:
+      - alg
+      - kid
+      - typ
+      properties:
+        alg:
+          const: ES256
+        kid:
+          type: string
+          minLength: 1
+          maxLength: 240
+        typ:
+          const: MSP+JWT
+    ExecutionAmountBinding:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+        - mode
+        - minor_units
+        - currency
+        properties:
+          mode:
+            const: ISO_4217
+          minor_units:
+            type: integer
+            minimum: 1
+            maximum: 9007199254740991
+          currency:
+            type: string
+            pattern: ^[A-Z]{3}$
+      - type: object
+        additionalProperties: false
+        required:
+        - mode
+        - atomic_units
+        - asset_decimals
+        - asset_id
+        - network
+        properties:
+          mode:
+            const: ATOMIC_ASSET
+          atomic_units:
+            type: string
+            pattern: ^[1-9][0-9]{0,77}$
+          asset_decimals:
+            type: integer
+            minimum: 0
+            maximum: 30
+          asset_id:
+            type: string
+            minLength: 1
+            maxLength: 500
+          network:
+            type: string
+            minLength: 1
+            maxLength: 240
+    ProviderSubmissionState:
+      type: string
+      enum:
+      - PREPARED
+      - SUBMITTING
+      - ACKNOWLEDGED
+      - UNKNOWN
+      - SETTLED
+      - FAILED_CONFIRMED
+      - CONFLICT
+      - PENDING
+    ExecutionPermitVerification:
+      type: object
+      additionalProperties: false
+      required:
+      - cryptographically_valid
+      - context_matched
+      - protected_header
+      - claims
+      - online_state
+      - one_use_enforced
+      - advisory_only
+      - provider_submission_permitted
+      - redemption_uri
+      properties:
+        cryptographically_valid:
+          const: true
+        context_matched:
+          type: boolean
+          description: True only when the caller supplied expected_audience and it matched exactly. Omission is reported as false, not as a failed signature.
+        protected_header:
+          $ref: '#/components/schemas/ExecutionPermitProtectedHeader'
+        claims:
+          $ref: '#/components/schemas/ExecutionPermitClaims'
+        online_state:
+          const: UNKNOWN
+        one_use_enforced:
+          const: false
+        advisory_only:
+          const: true
+        provider_submission_permitted:
+          const: false
+        redemption_uri:
+          const: https://mandateshield.com/api/v2/execution-permits/redeem
+    LegalAcceptanceRequiredError:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - code
+      - terms_version
+      - acceptance_url
+      properties:
+        error:
+          type: string
+        code:
+          const: LEGAL_ACCEPTANCE_REQUIRED
+        terms_version:
+          type: string
+          const: 2026-07-28.2
+        acceptance_url:
+          type: string
+          format: uri
+          const: https://mandateshield.com/dashboard?legal=required
+    ExecutionResourceBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - method
+      - uri
+      - body_digest
+      properties:
+        method:
+          type: string
+          pattern: ^[A-Z][A-Z0-9!#$%&'*+.^_`|~-]{0,31}$
+        uri:
+          type: string
+          format: uri
+          pattern: ^https://
+          maxLength: 2048
+        body_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+    ExecutionReceiptProtectedHeader:
+      type: object
+      additionalProperties: false
+      required:
+      - alg
+      - kid
+      - typ
+      properties:
+        alg:
+          const: ES256
+        kid:
+          type: string
+          minLength: 1
+          maxLength: 240
+        typ:
+          const: MSE+JWT
+    ExecutionExpectedRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - provider
+      - payee
+      - amount
+      - resource
+      properties:
+        provider:
+          $ref: '#/components/schemas/ExecutionProviderBinding'
+        payee:
+          $ref: '#/components/schemas/ExecutionPayeeBinding'
+        amount:
+          $ref: '#/components/schemas/ExecutionAmountBinding'
+        resource:
+          $ref: '#/components/schemas/ExecutionResourceBinding'
+      description: Exact signed request projection. Every field is compared against the permit; no caller-supplied provider identity overrides the authenticated PROCESSOR audience.
+    ExecutionPayeeBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - merchant_id
+      - destination
+      - destination_digest
+      properties:
+        merchant_id:
+          type: string
+          minLength: 1
+          maxLength: 240
+        destination:
+          type: string
+          minLength: 1
+          maxLength: 500
+        destination_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+    ExecutionPermitClaims:
+      $ref: https://mandateshield.com/schemas/execution-permit-v1.json
+    ProviderEvidenceClass:
+      type: string
+      enum:
+      - CALLER_ASSERTED
+      - FACILITATOR_SIGNED
+      - PROVIDER_API_VERIFIED
+      - CHAIN_FINALIZED
+      - UNRESOLVED
+      - LEDGER_DERIVED
+      description: PROVIDER_API_VERIFIED and CHAIN_FINALIZED are the current hosted terminal evidence classes checked without trusting the caller report. FACILITATOR_SIGNED is a retained evidence class for separately configured integrations and does not imply current provider/facilitator adoption. No class claims verification by an independent organization, audit or certification. LEDGER_DERIVED is used by execution receipts, not ProviderEvidence rows.
+    ExecutionPermitRedemptionResult:
+      type: object
+      additionalProperties: false
+      required:
+      - active
+      - status
+      - permit_id
+      - claim_id
+      - provider_submission_id
+      - claimed_at
+      - idempotent_replay
+      - same_claim
+      - credential_bound
+      - provider_submission_permitted
+      - provider_idempotency_key
+      - bindings
+      properties:
+        active:
+          type: boolean
+          description: True only for the fresh atomic claim represented by this response; false for an exact replay.
+        status:
+          const: CLAIMED
+        permit_id:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+        claim_id:
+          type: string
+          pattern: ^mspc_[a-f0-9]{32}$
+        provider_submission_id:
+          $ref: '#/components/schemas/ProviderSubmissionId'
+          description: Stable server-side submission ledger ID created with the permit and atomically moved from PREPARED to SUBMITTING by the fresh claim.
+        claimed_at:
+          type: integer
+          minimum: 1
+          description: Unix milliseconds.
+        idempotent_replay:
+          type: boolean
+        same_claim:
+          const: true
+        credential_bound:
+          const: true
+        provider_submission_permitted:
+          type: boolean
+          description: True only on the fresh atomic ISSUED-to-CLAIMED winner. It is false on every idempotent replay.
+        provider_idempotency_key:
+          type: string
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+          description: Signed key that the integrating provider/facilitator must preserve when deduplicating its downstream operation.
+        deployment_pilot:
+          type: object
+          additionalProperties: false
+          required:
+          - state
+          - private_completion
+          - public_proof_issued
+          - publication_consent_required
+          - publication_url
+          properties:
+            state:
+              const: PERMIT_REDEEMED
+            private_completion:
+              const: true
+            public_proof_issued:
+              const: false
+            publication_consent_required:
+              const: true
+            publication_url:
+              type: string
+              format: uri
+              const: https://mandateshield.com/launch
+          description: Present only for the isolated Deploy & Prove profile. It confirms that the bounded pilot reached private completion and that permit redemption issued no public proof. Publication is an optional separate finalization requiring fresh publication_consent=true; paid access does not require a public record.
+        bindings:
+          type: object
+          additionalProperties: false
+          required:
+          - audience
+          - provider
+          - payee
+          - amount
+          - resource
+          properties:
+            audience:
+              type: string
+              minLength: 1
+              maxLength: 240
+            provider:
+              $ref: '#/components/schemas/ExecutionProviderBinding'
+            payee:
+              $ref: '#/components/schemas/ExecutionPayeeBinding'
+            amount:
+              $ref: '#/components/schemas/ExecutionAmountBinding'
+            resource:
+              $ref: '#/components/schemas/ExecutionResourceBinding'
+      oneOf:
+      - properties:
+          active:
+            const: true
+          idempotent_replay:
+            const: false
+          provider_submission_permitted:
+            const: true
+      - properties:
+          active:
+            const: false
+          idempotent_replay:
+            const: true
+          provider_submission_permitted:
+            const: false
+    SignedExecutionReceipt:
+      type: object
+      additionalProperties: false
+      required:
+      - format
+      - compact
+      - execution_receipt_id
+      - key_id
+      - jwks_uri
+      - verify_uri
+      - historical_evidence_only
+      - execution_authorized
+      - evidence_class
+      - independent_verification
+      properties:
+        format:
+          const: application/mandateshield-execution-receipt+jwt
+        compact:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        execution_receipt_id:
+          type: string
+          pattern: ^mse_[a-f0-9]{32}$
+        key_id:
+          type: string
+          minLength: 1
+          maxLength: 240
+        jwks_uri:
+          const: https://mandateshield.com/.well-known/jwks.json
+        verify_uri:
+          const: https://mandateshield.com/api/v2/execution-receipts/verify
+        historical_evidence_only:
+          const: true
+        execution_authorized:
+          const: false
+        evidence_class:
+          $ref: '#/components/schemas/ProviderEvidenceClass'
+        independent_verification:
+          type: boolean
+          description: Legacy field name. True means configured evidence was checked without trusting the caller report; it does not mean verification by an independent organization, audit, certification, or provider adoption.
+      description: Historical terminal-state evidence. The signed artifact never grants a new provider submission and does not upgrade the evidence_class.
+    ExecutionProviderBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - profile
+      - environment
+      - account
+      - request_id
+      - request_digest
+      - idempotency_key
+      properties:
+        profile:
+          type: string
+          enum:
+          - GENERIC_HTTP_V1
+          - STRIPE_PAYMENT_INTENTS_V1
+          - X402_V2_EXACT
+          - MPP_CHARGE_V1
+        environment:
+          type: string
+          enum:
+          - test
+          - live
+        account:
+          type: string
+          minLength: 1
+          maxLength: 240
+        request_id:
+          type: string
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+        request_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        idempotency_key:
+          type: string
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+    ExecutionPermitVerificationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - compact
+      properties:
+        compact:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        expected_audience:
+          type: string
+          minLength: 1
+          maxLength: 240
+          description: Optional exact string comparison. Audience arrays and wildcard matching are not supported.
+    ProviderSubmissionReportRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - provider_submission_id
+      - permit_id
+      - claim_id
+      - payment_reference
+      - outcome
+      - occurred_at
+      properties:
+        provider_submission_id:
+          $ref: '#/components/schemas/ProviderSubmissionId'
+        permit_id:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+        claim_id:
+          type: string
+          pattern: ^mspc_[a-f0-9]{32}$
+        payment_reference:
+          type: string
+          minLength: 1
+          maxLength: 240
+        outcome:
+          type: string
+          enum:
+          - COMMITTED
+          - FAILED
+          - PENDING
+          - UNKNOWN
+          description: Caller observation only. It never permits a terminal transition until configured evidence is checked without trusting that observation.
+        occurred_at:
+          type: string
+          format: date-time
+          description: Caller observation time. The hosted endpoint accepts only its bounded freshness window.
+        provider_observation:
+          type: object
+          description: Optional bounded non-secret provider projection. Payment credentials, provider secrets and private keys are forbidden.
+  responses:
+    TooLarge:
+      description: Request exceeds the endpoint size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Invalid JSON, shape or parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LegalAcceptanceRequired:
+      description: The authenticated live account has not accepted the current business agreements
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
+    Unauthorized:
+      description: API key is missing, invalid or revoked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    hostingSession:
+      type: apiKey
+      in: header
+      name: OAI-Authenticated-User-Email
+      description: Hosting-injected authenticated account-owner identity. The hosting boundary validates the user session and injects this assertion; callers cannot authenticate by supplying this header directly. State-changing control-plane requests additionally require the trusted same-origin check documented by the operation.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: ms_test_… or ms_live_…
+      description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
+x-refined-from:
+- mandateshield-com-openapi.json
+- mandateshield-com-openapi.yml
+x-mandateshield-release:
+  product_version: 1.13.0
+  openapi_version: 3.4.0
+  standard_version: 2.4.0
+  released_at: '2026-07-28T14:25:22.000Z'
+  generated_at: '2026-07-28T14:25:22.000Z'
+  status: current
+  latest_pointer: https://mandateshield.com/current-release.json
+  superseded_by: null
+  canonical_versioned_documents:
+    openapi: https://mandateshield.com/openapi/3.4.0.json
+    llms: https://mandateshield.com/llms/1.13.0.txt
+    llms_full: https://mandateshield.com/llms-full/1.13.0.txt
+    discovery: https://mandateshield.com/discovery/1.13.0.json
