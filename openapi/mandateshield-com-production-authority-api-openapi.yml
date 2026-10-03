@@ -1,13 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Mandateshield Com Production authority API
+  title: MandateShield Payment Authority Production authority API
   version: 3.4.0
+  description: Fail-closed authority verification, provider-bound execution permits and provider-outcome reconciliation that is caller-report-independent for autonomous AI-agent purchases.
+  termsOfService: https://mandateshield.com/terms
   contact:
     name: Gökhan Vodinali · MandateShield operator
     url: https://mandateshield.com/legal
     email: support@hemelion.com
-  termsOfService: https://mandateshield.com/terms
-  description: 'Operations tagged Production authority across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://mandateshield.com
 tags:
@@ -60,8 +60,6 @@ paths:
           $ref: '#/components/responses/TooLarge'
         '428':
           $ref: '#/components/responses/LegalAcceptanceRequired'
-    servers:
-    - url: https://mandateshield.com
   /api/v2/verify:
     post:
       operationId: verifyCryptographicAuthority
@@ -177,8 +175,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    servers:
-    - url: https://mandateshield.com
   /api/v2/execution-authorizations:
     post:
       operationId: transitionExecutionAuthorization
@@ -265,8 +261,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    servers:
-    - url: https://mandateshield.com
   /api/v2/batch:
     post:
       operationId: verifyCryptographicAuthorityBatch
@@ -310,10 +304,179 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '413':
           $ref: '#/components/responses/TooLarge'
-    servers:
-    - url: https://mandateshield.com
 components:
   schemas:
+    ProcessorResult:
+      type: object
+      additionalProperties: false
+      required:
+      - payment_reference
+      - outcome
+      - payee
+      - audience
+      - occurred_at
+      - amount
+      properties:
+        payment_reference:
+          type: string
+          minLength: 1
+          maxLength: 240
+          description: Non-secret processor attempt/reference. It cannot be reused for another authorization under the same account and authenticated processor_audience.
+        outcome:
+          type: string
+          enum:
+          - COMMITTED
+          - NOT_SUBMITTED
+          - FAILED
+        payee:
+          type: string
+          description: Must exactly match the authorized merchant_id.
+        audience:
+          type: string
+          description: Must exactly match the pinned relying-party audience.
+        occurred_at:
+          type: string
+          format: date-time
+        amount:
+          oneOf:
+          - type: object
+            additionalProperties: false
+            required:
+            - minor_units
+            - currency
+            properties:
+              minor_units:
+                type: integer
+                minimum: 1
+              currency:
+                type: string
+                pattern: ^[A-Z]{3}$
+          - type: object
+            additionalProperties: false
+            required:
+            - atomic_units
+            - asset_decimals
+            - asset_id
+            - network
+            - resource
+            properties:
+              atomic_units:
+                type: string
+                pattern: ^(?:0|[1-9][0-9]{0,77})$
+              asset_decimals:
+                type: integer
+                minimum: 0
+                maximum: 30
+              asset_id:
+                type: string
+              network:
+                type: string
+              resource:
+                type: string
+      description: Caller-asserted processor outcome authenticated by the live API key and stored as a canonical digest plus bounded non-secret reference. Processor identity is derived from that key's processor_audience and cannot be supplied in this object. It is not provider evidence checked without trusting the caller.
+    ExecutionAuthorizationReservation:
+      type: object
+      additionalProperties: false
+      required:
+      - state
+      - consumable
+      - token_source
+      - transition_uri
+      - expires_at
+      - processor_integration_required
+      properties:
+        state:
+          $ref: '#/components/schemas/ExecutionAuthorizationState'
+        consumable:
+          type: boolean
+        token_source:
+          type:
+          - string
+          - 'null'
+          enum:
+          - signed_receipt.compact
+          - null
+        transition_uri:
+          const: https://mandateshield.com/api/v2/execution-authorizations
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        processor_integration_required:
+          const: true
+      description: 'RESERVED means the strict ALLOW and cumulative-budget reservation committed atomically. It is not a payment instruction: an integrating processor must obtain the single winning CONSUME transition and fresh exact-bound permit claim, then use an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.'
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+    StrictBatchResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - summary
+      - results
+      properties:
+        summary:
+          type: object
+          additionalProperties: false
+          required:
+          - total
+          - enforcement_authorized
+          - allowed
+          - reviewed
+          - blocked
+          - errors
+          properties:
+            total:
+              type: integer
+              minimum: 1
+              maximum: 25
+            enforcement_authorized:
+              type: integer
+              minimum: 0
+            allowed:
+              type: integer
+              minimum: 0
+            reviewed:
+              type: integer
+              minimum: 0
+            blocked:
+              type: integer
+              minimum: 0
+            errors:
+              type: integer
+              minimum: 0
+        results:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            type: object
+            required:
+            - index
+            - status
+            - result
+            properties:
+              index:
+                type: integer
+                minimum: 0
+                maximum: 24
+              status:
+                type: integer
+                minimum: 100
+                maximum: 599
+              result:
+                oneOf:
+                - $ref: '#/components/schemas/StrictDecision'
+                - $ref: '#/components/schemas/Error'
     StrictVerificationInput:
       type: object
       additionalProperties: false
@@ -325,6 +488,101 @@ components:
           $ref: '#/components/schemas/PurchaseEnvelope'
         evidence:
           $ref: '#/components/schemas/CryptographicEvidence'
+    PreflightDecision:
+      type: object
+      required:
+      - decision
+      - score
+      - receipt
+      - checked_at
+      - protocol
+      - findings
+      - risk
+      - recommended_action
+      - controls
+      - mode
+      - persisted
+      - enforcement_authorized
+      properties:
+        decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        policy_decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Deterministic control-coverage indicator, not a calibrated probability of fraud or loss.
+        receipt:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        checked_at:
+          type: string
+          format: date-time
+        protocol:
+          type: string
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+        risk:
+          $ref: '#/components/schemas/Risk'
+        recommended_action:
+          type: string
+        controls:
+          type: object
+          required:
+          - evaluated
+          - passed
+          properties:
+            evaluated:
+              type: integer
+              minimum: 0
+            passed:
+              type: integer
+              minimum: 0
+        mode:
+          type: string
+          enum:
+          - sandbox
+          - test
+          - live
+          - strict
+        persisted:
+          type: boolean
+        enforcement_authorized:
+          type: boolean
+          description: Always false for v1. In strict v2, true means a short-lived execution reservation committed atomically; an integrating processor must still obtain the single winning CONSUME transition and fresh exact-bound permit claim before an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.
+        mandate:
+          oneOf:
+          - $ref: '#/components/schemas/MandateBinding'
+          - type: 'null'
+    Finding:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - message
+      - severity
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum:
+          - high
+          - medium
+          - low
     PublicVerificationJwk:
       type: object
       description: Public signature-verification JWK. The release profile supports P-256 with ES256 and 2048–8192 bit RSA with RS256 or PS256. Registration and request verification use the same strict validation and import gate. A request-supplied key is not a trust anchor; live authorization requires an exact account pin.
@@ -413,9 +671,32 @@ components:
               enum:
               - RS256
               - PS256
-    ProviderSubmissionId:
-      type: string
-      pattern: ^psub_[a-f0-9]{32}$
+    ChallengeRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - mandate_id
+      - protocol
+      - key_thumbprint
+      properties:
+        mandate_id:
+          type: string
+          minLength: 1
+        protocol:
+          type: string
+          enum:
+          - AP2
+          - TAP
+          - UCP
+          - X402
+          - MPP
+          - ACP
+          - CUSTOM
+          description: Exact protocol for this challenge. ANY is valid only when registering a trust-key pin.
+        key_thumbprint:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{43}$
+          description: RFC 7638 thumbprint of the account-pinned payment-authority key.
     PurchaseEnvelope:
       type: object
       additionalProperties: true
@@ -822,625 +1103,6 @@ components:
               required:
               - atomic_units
               - asset_decimals
-    Challenge:
-      type: object
-      additionalProperties: false
-      required:
-      - nonce
-      - created_at
-      - expires_at
-      - mandate_id
-      - mandate_version
-      - mandate_hash
-      - protocol
-      - key_thumbprint
-      - issuer
-      - audience
-      - expires_at_iso
-      properties:
-        nonce:
-          type: string
-        created_at:
-          type: integer
-          description: Unix milliseconds
-        expires_at:
-          type: integer
-          description: Unix milliseconds
-        mandate_id:
-          type: string
-        mandate_version:
-          type: integer
-          minimum: 1
-        mandate_hash:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        protocol:
-          type: string
-        key_thumbprint:
-          type: string
-          pattern: ^[A-Za-z0-9_-]{43}$
-        issuer:
-          type: string
-          minLength: 1
-          description: Issuer registered with the selected key pin. Sign this exact value.
-        audience:
-          type: string
-          minLength: 1
-          description: Audience registered with the selected key pin. Sign this exact value.
-        expires_at_iso:
-          type: string
-          format: date-time
-    ExecutionAuthorizationState:
-      type: string
-      enum:
-      - RESERVED
-      - CONSUMED
-      - COMMITTED
-      - RELEASED
-      - EXPIRED
-      - SETTLEMENT_UNKNOWN
-      - NOT_RESERVED
-      - ARCHIVAL_ONLY
-    ProviderEvidenceId:
-      type: string
-      pattern: ^pevd_[a-f0-9]{32}$
-    ExecutionAuthorizationReservation:
-      type: object
-      additionalProperties: false
-      required:
-      - state
-      - consumable
-      - token_source
-      - transition_uri
-      - expires_at
-      - processor_integration_required
-      properties:
-        state:
-          $ref: '#/components/schemas/ExecutionAuthorizationState'
-        consumable:
-          type: boolean
-        token_source:
-          type:
-          - string
-          - 'null'
-          enum:
-          - signed_receipt.compact
-          - null
-        transition_uri:
-          const: https://mandateshield.com/api/v2/execution-authorizations
-        expires_at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-        processor_integration_required:
-          const: true
-      description: 'RESERVED means the strict ALLOW and cumulative-budget reservation committed atomically. It is not a payment instruction: an integrating processor must obtain the single winning CONSUME transition and fresh exact-bound permit claim, then use an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.'
-    StrictBatchResponse:
-      type: object
-      additionalProperties: false
-      required:
-      - summary
-      - results
-      properties:
-        summary:
-          type: object
-          additionalProperties: false
-          required:
-          - total
-          - enforcement_authorized
-          - allowed
-          - reviewed
-          - blocked
-          - errors
-          properties:
-            total:
-              type: integer
-              minimum: 1
-              maximum: 25
-            enforcement_authorized:
-              type: integer
-              minimum: 0
-            allowed:
-              type: integer
-              minimum: 0
-            reviewed:
-              type: integer
-              minimum: 0
-            blocked:
-              type: integer
-              minimum: 0
-            errors:
-              type: integer
-              minimum: 0
-        results:
-          type: array
-          minItems: 1
-          maxItems: 25
-          items:
-            type: object
-            required:
-            - index
-            - status
-            - result
-            properties:
-              index:
-                type: integer
-                minimum: 0
-                maximum: 24
-              status:
-                type: integer
-                minimum: 100
-                maximum: 599
-              result:
-                oneOf:
-                - $ref: '#/components/schemas/StrictDecision'
-                - $ref: '#/components/schemas/Error'
-    StrictDecision:
-      allOf:
-      - $ref: '#/components/schemas/PreflightDecision'
-      - type: object
-        required:
-        - assurance
-        - signed_receipt
-        - transparency
-        - execution_authorization
-        properties:
-          assurance:
-            $ref: '#/components/schemas/EvidenceAssurance'
-          signed_receipt:
-            $ref: '#/components/schemas/SignedDecisionReceipt'
-          transparency:
-            $ref: '#/components/schemas/TransparencyStatus'
-          execution_authorization:
-            $ref: '#/components/schemas/ExecutionAuthorizationReservation'
-    ProviderBindingInput:
-      type: object
-      additionalProperties: false
-      required:
-      - profile
-      - environment
-      - account
-      - request_id
-      - payee_destination
-      - method
-      - resource
-      - body_digest
-      properties:
-        profile:
-          type: string
-          enum:
-          - GENERIC_HTTP_V1
-          - STRIPE_PAYMENT_INTENTS_V1
-          - X402_V2_EXACT
-          - MPP_CHARGE_V1
-        environment:
-          type: string
-          enum:
-          - test
-          - live
-        account:
-          type: string
-          minLength: 1
-          maxLength: 240
-        request_id:
-          type: string
-          minLength: 1
-          maxLength: 240
-        payee_destination:
-          type: string
-          minLength: 1
-          maxLength: 500
-          description: Must exactly equal expected_envelope.merchant_id or a provider destination carried by its canonical signed payee_identity. The provider profile must match that identity. MandateShield binds this value but does not independently resolve or certify a PSP account.
-        method:
-          type: string
-          enum:
-          - GET
-          - POST
-          - PUT
-          - PATCH
-        resource:
-          type: string
-          format: uri
-          pattern: ^https://
-          maxLength: 2048
-          description: Canonical absolute HTTPS URI without credentials or a fragment.
-        body_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-      description: Optional only for CONSUME. Requests a portable provider-bound permit rather than direct legacy gateway submission permission.
-    CryptographicEvidence:
-      type: object
-      additionalProperties: false
-      description: JWS, an AP2-shaped closed-payment SD-JWT projection with RFC 9901 KB-JWT, or normalized TAP-shaped RFC 9421-style evidence. AP2 checkout_jwt hash, delegate chain, open-mandate and issuer-registry checks plus Visa TAP structured-field/trust-store processing remain external.
-      required:
-      - format
-      - public_key
-      properties:
-        format:
-          type: string
-          enum:
-          - jws
-          - sd-jwt
-          - http-message-signature
-        compact:
-          type: string
-          description: Compact JWS or SD-JWT serialization.
-        public_key:
-          $ref: '#/components/schemas/PublicVerificationJwk'
-        expected_audience:
-          type: string
-          description: Optional additional check. The account-pinned audience remains authoritative in production.
-        expected_nonce:
-          type: string
-          description: Optional additional check. Production consumes the signed server challenge as a separate single-winner state transition.
-        expected_authority:
-          type: string
-        algorithm:
-          type: string
-          enum:
-          - ES256
-          - RS256
-          - PS256
-        signature:
-          type: string
-        signature_input:
-          $ref: '#/components/schemas/HttpSignatureInput'
-        components:
-          type: object
-          additionalProperties:
-            type: string
-      allOf:
-      - if:
-          properties:
-            format:
-              enum:
-              - jws
-              - sd-jwt
-        then:
-          required:
-          - compact
-      - if:
-          properties:
-            format:
-              const: http-message-signature
-        then:
-          required:
-          - algorithm
-          - signature
-          - signature_input
-          - components
-    Risk:
-      type: object
-      required:
-      - level
-      - requested_value
-      - mandate_headroom
-      - blocked_value
-      - primary_reason
-      properties:
-        level:
-          type: string
-          enum:
-          - CLEAR
-          - GUARDED
-          - ELEVATED
-          - CRITICAL
-        requested_value:
-          type:
-          - number
-          - 'null'
-        mandate_headroom:
-          type:
-          - number
-          - 'null'
-        blocked_value:
-          type: number
-          minimum: 0
-        primary_reason:
-          type:
-          - string
-          - 'null'
-    LegalAcceptanceRequiredError:
-      type: object
-      additionalProperties: false
-      required:
-      - error
-      - code
-      - terms_version
-      - acceptance_url
-      properties:
-        error:
-          type: string
-        code:
-          const: LEGAL_ACCEPTANCE_REQUIRED
-        terms_version:
-          type: string
-          const: 2026-07-28.2
-        acceptance_url:
-          type: string
-          format: uri
-          const: https://mandateshield.com/dashboard?legal=required
-    ProcessorResult:
-      type: object
-      additionalProperties: false
-      required:
-      - payment_reference
-      - outcome
-      - payee
-      - audience
-      - occurred_at
-      - amount
-      properties:
-        payment_reference:
-          type: string
-          minLength: 1
-          maxLength: 240
-          description: Non-secret processor attempt/reference. It cannot be reused for another authorization under the same account and authenticated processor_audience.
-        outcome:
-          type: string
-          enum:
-          - COMMITTED
-          - NOT_SUBMITTED
-          - FAILED
-        payee:
-          type: string
-          description: Must exactly match the authorized merchant_id.
-        audience:
-          type: string
-          description: Must exactly match the pinned relying-party audience.
-        occurred_at:
-          type: string
-          format: date-time
-        amount:
-          oneOf:
-          - type: object
-            additionalProperties: false
-            required:
-            - minor_units
-            - currency
-            properties:
-              minor_units:
-                type: integer
-                minimum: 1
-              currency:
-                type: string
-                pattern: ^[A-Z]{3}$
-          - type: object
-            additionalProperties: false
-            required:
-            - atomic_units
-            - asset_decimals
-            - asset_id
-            - network
-            - resource
-            properties:
-              atomic_units:
-                type: string
-                pattern: ^(?:0|[1-9][0-9]{0,77})$
-              asset_decimals:
-                type: integer
-                minimum: 0
-                maximum: 30
-              asset_id:
-                type: string
-              network:
-                type: string
-              resource:
-                type: string
-      description: Caller-asserted processor outcome authenticated by the live API key and stored as a canonical digest plus bounded non-secret reference. Processor identity is derived from that key's processor_audience and cannot be supplied in this object. It is not provider evidence checked without trusting the caller.
-    PreflightDecision:
-      type: object
-      required:
-      - decision
-      - score
-      - receipt
-      - checked_at
-      - protocol
-      - findings
-      - risk
-      - recommended_action
-      - controls
-      - mode
-      - persisted
-      - enforcement_authorized
-      properties:
-        decision:
-          type: string
-          enum:
-          - ALLOW
-          - REVIEW
-          - BLOCK
-        policy_decision:
-          type: string
-          enum:
-          - ALLOW
-          - REVIEW
-          - BLOCK
-        score:
-          type: integer
-          minimum: 0
-          maximum: 100
-          description: Deterministic control-coverage indicator, not a calibrated probability of fraud or loss.
-        receipt:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        checked_at:
-          type: string
-          format: date-time
-        protocol:
-          type: string
-        findings:
-          type: array
-          items:
-            $ref: '#/components/schemas/Finding'
-        risk:
-          $ref: '#/components/schemas/Risk'
-        recommended_action:
-          type: string
-        controls:
-          type: object
-          required:
-          - evaluated
-          - passed
-          properties:
-            evaluated:
-              type: integer
-              minimum: 0
-            passed:
-              type: integer
-              minimum: 0
-        mode:
-          type: string
-          enum:
-          - sandbox
-          - test
-          - live
-          - strict
-        persisted:
-          type: boolean
-        enforcement_authorized:
-          type: boolean
-          description: Always false for v1. In strict v2, true means a short-lived execution reservation committed atomically; an integrating processor must still obtain the single winning CONSUME transition and fresh exact-bound permit claim before an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.
-        mandate:
-          oneOf:
-          - $ref: '#/components/schemas/MandateBinding'
-          - type: 'null'
-    TransparencyStatus:
-      type: object
-      additionalProperties: false
-      required:
-      - status
-      - uri
-      properties:
-        status:
-          type: string
-          enum:
-          - RECORDED
-          - NOT_RECORDED
-        uri:
-          type: string
-          format: uri
-    SignedDecisionReceipt:
-      type: object
-      additionalProperties: false
-      required:
-      - format
-      - compact
-      - receipt_id
-      - key_id
-      - jwks_uri
-      - verify_uri
-      - transparency_uri
-      - execution_authorization_uri
-      properties:
-        format:
-          const: application/mandateshield-receipt+jwt
-        compact:
-          type: string
-        receipt_id:
-          type: string
-          pattern: ^msr_[a-f0-9]{32}$
-        key_id:
-          type: string
-        jwks_uri:
-          const: https://mandateshield.com/.well-known/jwks.json
-        verify_uri:
-          const: https://mandateshield.com/api/v2/receipts/verify
-        transparency_uri:
-          type: string
-          pattern: ^https://mandateshield\.com/api/v2/transparency/msr_[a-f0-9]{32}$
-        execution_authorization_uri:
-          const: https://mandateshield.com/api/v2/execution-authorizations
-    ChallengeRequest:
-      type: object
-      additionalProperties: false
-      required:
-      - mandate_id
-      - protocol
-      - key_thumbprint
-      properties:
-        mandate_id:
-          type: string
-          minLength: 1
-        protocol:
-          type: string
-          enum:
-          - AP2
-          - TAP
-          - UCP
-          - X402
-          - MPP
-          - ACP
-          - CUSTOM
-          description: Exact protocol for this challenge. ANY is valid only when registering a trust-key pin.
-        key_thumbprint:
-          type: string
-          pattern: ^[A-Za-z0-9_-]{43}$
-          description: RFC 7638 thumbprint of the account-pinned payment-authority key.
-    ProviderEvidenceClass:
-      type: string
-      enum:
-      - CALLER_ASSERTED
-      - FACILITATOR_SIGNED
-      - PROVIDER_API_VERIFIED
-      - CHAIN_FINALIZED
-      - UNRESOLVED
-      - LEDGER_DERIVED
-      description: PROVIDER_API_VERIFIED and CHAIN_FINALIZED are the current hosted terminal evidence classes checked without trusting the caller report. FACILITATOR_SIGNED is a retained evidence class for separately configured integrations and does not imply current provider/facilitator adoption. No class claims verification by an independent organization, audit or certification. LEDGER_DERIVED is used by execution receipts, not ProviderEvidence rows.
-    SignedExecutionReceipt:
-      type: object
-      additionalProperties: false
-      required:
-      - format
-      - compact
-      - execution_receipt_id
-      - key_id
-      - jwks_uri
-      - verify_uri
-      - historical_evidence_only
-      - execution_authorized
-      - evidence_class
-      - independent_verification
-      properties:
-        format:
-          const: application/mandateshield-execution-receipt+jwt
-        compact:
-          type: string
-          minLength: 1
-          maxLength: 20000
-        execution_receipt_id:
-          type: string
-          pattern: ^mse_[a-f0-9]{32}$
-        key_id:
-          type: string
-          minLength: 1
-          maxLength: 240
-        jwks_uri:
-          const: https://mandateshield.com/.well-known/jwks.json
-        verify_uri:
-          const: https://mandateshield.com/api/v2/execution-receipts/verify
-        historical_evidence_only:
-          const: true
-        execution_authorized:
-          const: false
-        evidence_class:
-          $ref: '#/components/schemas/ProviderEvidenceClass'
-        independent_verification:
-          type: boolean
-          description: Legacy field name. True means configured evidence was checked without trusting the caller report; it does not mean verification by an independent organization, audit, certification, or provider adoption.
-      description: Historical terminal-state evidence. The signed artifact never grants a new provider submission and does not upgrade the evidence_class.
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
     ExecutionAuthorizationTransitionRequest:
       type: object
       additionalProperties: false
@@ -1521,148 +1183,96 @@ components:
         then:
           properties:
             provider_binding: false
-    MandateBinding:
+    CryptographicEvidence:
       type: object
       additionalProperties: false
+      description: JWS, an AP2-shaped closed-payment SD-JWT projection with RFC 9901 KB-JWT, or normalized TAP-shaped RFC 9421-style evidence. AP2 checkout_jwt hash, delegate chain, open-mandate and issuer-registry checks plus Visa TAP structured-field/trust-store processing remain external.
       required:
-      - id
-      - version
-      - policy_hash
-      - source
-      properties:
-        id:
-          type: string
-        version:
-          type: integer
-          minimum: 1
-        policy_hash:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        source:
-          const: ACCOUNT_REGISTRY
-    HttpSignatureInput:
-      type: object
-      additionalProperties: false
-      required:
-      - covered_components
-      - nonce
-      - created
-      - expires
-      - keyid
-      properties:
-        covered_components:
-          type: array
-          minItems: 4
-          items:
-            type: string
-        nonce:
-          type: string
-        created:
-          type: integer
-        expires:
-          type: integer
-        keyid:
-          type: string
-        tag:
-          type: string
-    EvidenceAssurance:
-      type: object
-      required:
-      - status
-      - signature_valid
-      - authority_valid
       - format
-      - algorithm
-      - key_id
-      - key_trust
-      - key_thumbprint
-      - issuer
-      - audiences
-      - nonce
-      - issued_at
-      - expires_at
-      - input_digest
-      - claims_digest
-      - findings
+      - public_key
       properties:
-        status:
-          type: string
-          enum:
-          - VERIFIED
-          - REJECTED
-        signature_valid:
-          type: boolean
-        authority_valid:
-          type: boolean
         format:
           type: string
+          enum:
+          - jws
+          - sd-jwt
+          - http-message-signature
+        compact:
+          type: string
+          description: Compact JWS or SD-JWT serialization.
+        public_key:
+          $ref: '#/components/schemas/PublicVerificationJwk'
+        expected_audience:
+          type: string
+          description: Optional additional check. The account-pinned audience remains authoritative in production.
+        expected_nonce:
+          type: string
+          description: Optional additional check. Production consumes the signed server challenge as a separate single-winner state transition.
+        expected_authority:
+          type: string
         algorithm:
-          type:
-          - string
-          - 'null'
-        key_id:
-          type:
-          - string
-          - 'null'
-        key_trust:
           type: string
           enum:
-          - CALLER_SUPPLIED
-          - ACCOUNT_PINNED
-        key_thumbprint:
-          type:
-          - string
-          - 'null'
-        issuer:
-          type:
-          - string
-          - 'null'
-        audiences:
-          type: array
-          items:
+          - ES256
+          - RS256
+          - PS256
+        signature:
+          type: string
+        signature_input:
+          $ref: '#/components/schemas/HttpSignatureInput'
+        components:
+          type: object
+          additionalProperties:
             type: string
-        nonce:
-          type:
-          - string
-          - 'null'
-        issued_at:
-          type:
-          - integer
-          - 'null'
-        expires_at:
-          type:
-          - integer
-          - 'null'
-        input_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        claims_digest:
-          type:
-          - string
-          - 'null'
-          pattern: ^sha256:[a-f0-9]{64}$
-        findings:
-          type: array
-          items:
-            $ref: '#/components/schemas/Finding'
-    Finding:
-      type: object
-      additionalProperties: false
-      required:
-      - code
-      - message
-      - severity
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        severity:
-          type: string
-          enum:
-          - high
-          - medium
-          - low
+      allOf:
+      - if:
+          properties:
+            format:
+              enum:
+              - jws
+              - sd-jwt
+        then:
+          required:
+          - compact
+      - if:
+          properties:
+            format:
+              const: http-message-signature
+        then:
+          required:
+          - algorithm
+          - signature
+          - signature_input
+          - components
+    StrictDecision:
+      allOf:
+      - $ref: '#/components/schemas/PreflightDecision'
+      - type: object
+        required:
+        - assurance
+        - signed_receipt
+        - transparency
+        - execution_authorization
+        properties:
+          assurance:
+            $ref: '#/components/schemas/EvidenceAssurance'
+          signed_receipt:
+            $ref: '#/components/schemas/SignedDecisionReceipt'
+          transparency:
+            $ref: '#/components/schemas/TransparencyStatus'
+          execution_authorization:
+            $ref: '#/components/schemas/ExecutionAuthorizationReservation'
+    ExecutionAuthorizationState:
+      type: string
+      enum:
+      - RESERVED
+      - CONSUMED
+      - COMMITTED
+      - RELEASED
+      - EXPIRED
+      - SETTLEMENT_UNKNOWN
+      - NOT_RESERVED
+      - ARCHIVAL_ONLY
     SignedExecutionPermit:
       type: object
       additionalProperties: false
@@ -1706,6 +1316,286 @@ components:
         offline_one_use_enforced:
           const: false
       description: Portable cryptographic permit. It is not a bearer proof of unused state and never authorizes direct provider submission without a fresh online claim.
+    HttpSignatureInput:
+      type: object
+      additionalProperties: false
+      required:
+      - covered_components
+      - nonce
+      - created
+      - expires
+      - keyid
+      properties:
+        covered_components:
+          type: array
+          minItems: 4
+          items:
+            type: string
+        nonce:
+          type: string
+        created:
+          type: integer
+        expires:
+          type: integer
+        keyid:
+          type: string
+        tag:
+          type: string
+    ProviderSubmissionId:
+      type: string
+      pattern: ^psub_[a-f0-9]{32}$
+    Challenge:
+      type: object
+      additionalProperties: false
+      required:
+      - nonce
+      - created_at
+      - expires_at
+      - mandate_id
+      - mandate_version
+      - mandate_hash
+      - protocol
+      - key_thumbprint
+      - issuer
+      - audience
+      - expires_at_iso
+      properties:
+        nonce:
+          type: string
+        created_at:
+          type: integer
+          description: Unix milliseconds
+        expires_at:
+          type: integer
+          description: Unix milliseconds
+        mandate_id:
+          type: string
+        mandate_version:
+          type: integer
+          minimum: 1
+        mandate_hash:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        protocol:
+          type: string
+        key_thumbprint:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{43}$
+        issuer:
+          type: string
+          minLength: 1
+          description: Issuer registered with the selected key pin. Sign this exact value.
+        audience:
+          type: string
+          minLength: 1
+          description: Audience registered with the selected key pin. Sign this exact value.
+        expires_at_iso:
+          type: string
+          format: date-time
+    SignedExecutionReceipt:
+      type: object
+      additionalProperties: false
+      required:
+      - format
+      - compact
+      - execution_receipt_id
+      - key_id
+      - jwks_uri
+      - verify_uri
+      - historical_evidence_only
+      - execution_authorized
+      - evidence_class
+      - independent_verification
+      properties:
+        format:
+          const: application/mandateshield-execution-receipt+jwt
+        compact:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        execution_receipt_id:
+          type: string
+          pattern: ^mse_[a-f0-9]{32}$
+        key_id:
+          type: string
+          minLength: 1
+          maxLength: 240
+        jwks_uri:
+          const: https://mandateshield.com/.well-known/jwks.json
+        verify_uri:
+          const: https://mandateshield.com/api/v2/execution-receipts/verify
+        historical_evidence_only:
+          const: true
+        execution_authorized:
+          const: false
+        evidence_class:
+          $ref: '#/components/schemas/ProviderEvidenceClass'
+        independent_verification:
+          type: boolean
+          description: Legacy field name. True means configured evidence was checked without trusting the caller report; it does not mean verification by an independent organization, audit, certification, or provider adoption.
+      description: Historical terminal-state evidence. The signed artifact never grants a new provider submission and does not upgrade the evidence_class.
+    ProviderEvidenceClass:
+      type: string
+      enum:
+      - CALLER_ASSERTED
+      - FACILITATOR_SIGNED
+      - PROVIDER_API_VERIFIED
+      - CHAIN_FINALIZED
+      - UNRESOLVED
+      - LEDGER_DERIVED
+      description: PROVIDER_API_VERIFIED and CHAIN_FINALIZED are the current hosted terminal evidence classes checked without trusting the caller report. FACILITATOR_SIGNED is a retained evidence class for separately configured integrations and does not imply current provider/facilitator adoption. No class claims verification by an independent organization, audit or certification. LEDGER_DERIVED is used by execution receipts, not ProviderEvidence rows.
+    Risk:
+      type: object
+      required:
+      - level
+      - requested_value
+      - mandate_headroom
+      - blocked_value
+      - primary_reason
+      properties:
+        level:
+          type: string
+          enum:
+          - CLEAR
+          - GUARDED
+          - ELEVATED
+          - CRITICAL
+        requested_value:
+          type:
+          - number
+          - 'null'
+        mandate_headroom:
+          type:
+          - number
+          - 'null'
+        blocked_value:
+          type: number
+          minimum: 0
+        primary_reason:
+          type:
+          - string
+          - 'null'
+    SignedDecisionReceipt:
+      type: object
+      additionalProperties: false
+      required:
+      - format
+      - compact
+      - receipt_id
+      - key_id
+      - jwks_uri
+      - verify_uri
+      - transparency_uri
+      - execution_authorization_uri
+      properties:
+        format:
+          const: application/mandateshield-receipt+jwt
+        compact:
+          type: string
+        receipt_id:
+          type: string
+          pattern: ^msr_[a-f0-9]{32}$
+        key_id:
+          type: string
+        jwks_uri:
+          const: https://mandateshield.com/.well-known/jwks.json
+        verify_uri:
+          const: https://mandateshield.com/api/v2/receipts/verify
+        transparency_uri:
+          type: string
+          pattern: ^https://mandateshield\.com/api/v2/transparency/msr_[a-f0-9]{32}$
+        execution_authorization_uri:
+          const: https://mandateshield.com/api/v2/execution-authorizations
+    LegalAcceptanceRequiredError:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - code
+      - terms_version
+      - acceptance_url
+      properties:
+        error:
+          type: string
+        code:
+          const: LEGAL_ACCEPTANCE_REQUIRED
+        terms_version:
+          type: string
+          const: 2026-07-28.2
+        acceptance_url:
+          type: string
+          format: uri
+          const: https://mandateshield.com/dashboard?legal=required
+    TransparencyStatus:
+      type: object
+      additionalProperties: false
+      required:
+      - status
+      - uri
+      properties:
+        status:
+          type: string
+          enum:
+          - RECORDED
+          - NOT_RECORDED
+        uri:
+          type: string
+          format: uri
+    ProviderBindingInput:
+      type: object
+      additionalProperties: false
+      required:
+      - profile
+      - environment
+      - account
+      - request_id
+      - payee_destination
+      - method
+      - resource
+      - body_digest
+      properties:
+        profile:
+          type: string
+          enum:
+          - GENERIC_HTTP_V1
+          - STRIPE_PAYMENT_INTENTS_V1
+          - X402_V2_EXACT
+          - MPP_CHARGE_V1
+        environment:
+          type: string
+          enum:
+          - test
+          - live
+        account:
+          type: string
+          minLength: 1
+          maxLength: 240
+        request_id:
+          type: string
+          minLength: 1
+          maxLength: 240
+        payee_destination:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Must exactly equal expected_envelope.merchant_id or a provider destination carried by its canonical signed payee_identity. The provider profile must match that identity. MandateShield binds this value but does not independently resolve or certify a PSP account.
+        method:
+          type: string
+          enum:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+        resource:
+          type: string
+          format: uri
+          pattern: ^https://
+          maxLength: 2048
+          description: Canonical absolute HTTPS URI without credentials or a fragment.
+        body_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+      description: Optional only for CONSUME. Requests a portable provider-bound permit rather than direct legacy gateway submission permission.
     ExecutionAuthorizationTransitionResult:
       type: object
       additionalProperties: false
@@ -1874,7 +1764,115 @@ components:
               - CHAIN_FINALIZED
             execution_receipt:
               $ref: '#/components/schemas/SignedExecutionReceipt'
+    ProviderEvidenceId:
+      type: string
+      pattern: ^pevd_[a-f0-9]{32}$
+    EvidenceAssurance:
+      type: object
+      required:
+      - status
+      - signature_valid
+      - authority_valid
+      - format
+      - algorithm
+      - key_id
+      - key_trust
+      - key_thumbprint
+      - issuer
+      - audiences
+      - nonce
+      - issued_at
+      - expires_at
+      - input_digest
+      - claims_digest
+      - findings
+      properties:
+        status:
+          type: string
+          enum:
+          - VERIFIED
+          - REJECTED
+        signature_valid:
+          type: boolean
+        authority_valid:
+          type: boolean
+        format:
+          type: string
+        algorithm:
+          type:
+          - string
+          - 'null'
+        key_id:
+          type:
+          - string
+          - 'null'
+        key_trust:
+          type: string
+          enum:
+          - CALLER_SUPPLIED
+          - ACCOUNT_PINNED
+        key_thumbprint:
+          type:
+          - string
+          - 'null'
+        issuer:
+          type:
+          - string
+          - 'null'
+        audiences:
+          type: array
+          items:
+            type: string
+        nonce:
+          type:
+          - string
+          - 'null'
+        issued_at:
+          type:
+          - integer
+          - 'null'
+        expires_at:
+          type:
+          - integer
+          - 'null'
+        input_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        claims_digest:
+          type:
+          - string
+          - 'null'
+          pattern: ^sha256:[a-f0-9]{64}$
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+    MandateBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - version
+      - policy_hash
+      - source
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        policy_hash:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        source:
+          const: ACCOUNT_REGISTRY
   responses:
+    LegalAcceptanceRequired:
+      description: The authenticated live account has not accepted the current business agreements
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
     TooLarge:
       description: Request exceeds the endpoint size limit
       content:
@@ -1887,12 +1885,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    LegalAcceptanceRequired:
-      description: The authenticated live account has not accepted the current business agreements
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
     Unauthorized:
       description: API key is missing, invalid or revoked
       content:
@@ -1910,9 +1902,6 @@ components:
       scheme: bearer
       bearerFormat: ms_test_… or ms_live_…
       description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
-x-refined-from:
-- mandateshield-com-openapi.json
-- mandateshield-com-openapi.yml
 x-mandateshield-release:
   product_version: 1.13.0
   openapi_version: 3.4.0

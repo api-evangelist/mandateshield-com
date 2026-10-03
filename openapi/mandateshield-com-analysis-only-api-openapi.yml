@@ -1,13 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Mandateshield Com Analysis only API
+  title: MandateShield Payment Authority Analysis only API
   version: 3.4.0
+  description: Fail-closed authority verification, provider-bound execution permits and provider-outcome reconciliation that is caller-report-independent for autonomous AI-agent purchases.
+  termsOfService: https://mandateshield.com/terms
   contact:
     name: Gökhan Vodinali · MandateShield operator
     url: https://mandateshield.com/legal
     email: support@hemelion.com
-  termsOfService: https://mandateshield.com/terms
-  description: 'Operations tagged Analysis only across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://mandateshield.com
 tags:
@@ -69,8 +69,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    servers:
-    - url: https://mandateshield.com
   /api/v1/batch:
     post:
       operationId: evaluatePurchaseBatch
@@ -108,116 +106,39 @@ paths:
           description: Ordered analysis results
         '400':
           $ref: '#/components/responses/BadRequest'
-    servers:
-    - url: https://mandateshield.com
 components:
   schemas:
-    PreflightDecision:
-      type: object
-      required:
-      - decision
-      - score
-      - receipt
-      - checked_at
-      - protocol
-      - findings
-      - risk
-      - recommended_action
-      - controls
-      - mode
-      - persisted
-      - enforcement_authorized
-      properties:
-        decision:
-          type: string
-          enum:
-          - ALLOW
-          - REVIEW
-          - BLOCK
-        policy_decision:
-          type: string
-          enum:
-          - ALLOW
-          - REVIEW
-          - BLOCK
-        score:
-          type: integer
-          minimum: 0
-          maximum: 100
-          description: Deterministic control-coverage indicator, not a calibrated probability of fraud or loss.
-        receipt:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        checked_at:
-          type: string
-          format: date-time
-        protocol:
-          type: string
-        findings:
-          type: array
-          items:
-            $ref: '#/components/schemas/Finding'
-        risk:
-          $ref: '#/components/schemas/Risk'
-        recommended_action:
-          type: string
-        controls:
-          type: object
-          required:
-          - evaluated
-          - passed
-          properties:
-            evaluated:
-              type: integer
-              minimum: 0
-            passed:
-              type: integer
-              minimum: 0
-        mode:
-          type: string
-          enum:
-          - sandbox
-          - test
-          - live
-          - strict
-        persisted:
-          type: boolean
-        enforcement_authorized:
-          type: boolean
-          description: Always false for v1. In strict v2, true means a short-lived execution reservation committed atomically; an integrating processor must still obtain the single winning CONSUME transition and fresh exact-bound permit claim before an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.
-        mandate:
-          oneOf:
-          - $ref: '#/components/schemas/MandateBinding'
-          - type: 'null'
-    AnalysisDecision:
-      allOf:
-      - $ref: '#/components/schemas/PreflightDecision'
-      - type: object
-        required:
-        - enforcement_authorized
-        properties:
-          enforcement_authorized:
-            const: false
-            description: The v1 analysis profile never authorizes execution.
-    MandateBinding:
+    LegalAcceptanceRequiredError:
       type: object
       additionalProperties: false
       required:
-      - id
-      - version
-      - policy_hash
-      - source
+      - error
+      - code
+      - terms_version
+      - acceptance_url
       properties:
-        id:
+        error:
           type: string
-        version:
-          type: integer
-          minimum: 1
-        policy_hash:
+        code:
+          const: LEGAL_ACCEPTANCE_REQUIRED
+        terms_version:
           type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        source:
-          const: ACCOUNT_REGISTRY
+          const: 2026-07-28.2
+        acceptance_url:
+          type: string
+          format: uri
+          const: https://mandateshield.com/dashboard?legal=required
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
     PurchaseEnvelope:
       type: object
       additionalProperties: true
@@ -624,6 +545,112 @@ components:
               required:
               - atomic_units
               - asset_decimals
+    AnalysisDecision:
+      allOf:
+      - $ref: '#/components/schemas/PreflightDecision'
+      - type: object
+        required:
+        - enforcement_authorized
+        properties:
+          enforcement_authorized:
+            const: false
+            description: The v1 analysis profile never authorizes execution.
+    PreflightDecision:
+      type: object
+      required:
+      - decision
+      - score
+      - receipt
+      - checked_at
+      - protocol
+      - findings
+      - risk
+      - recommended_action
+      - controls
+      - mode
+      - persisted
+      - enforcement_authorized
+      properties:
+        decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        policy_decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Deterministic control-coverage indicator, not a calibrated probability of fraud or loss.
+        receipt:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        checked_at:
+          type: string
+          format: date-time
+        protocol:
+          type: string
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+        risk:
+          $ref: '#/components/schemas/Risk'
+        recommended_action:
+          type: string
+        controls:
+          type: object
+          required:
+          - evaluated
+          - passed
+          properties:
+            evaluated:
+              type: integer
+              minimum: 0
+            passed:
+              type: integer
+              minimum: 0
+        mode:
+          type: string
+          enum:
+          - sandbox
+          - test
+          - live
+          - strict
+        persisted:
+          type: boolean
+        enforcement_authorized:
+          type: boolean
+          description: Always false for v1. In strict v2, true means a short-lived execution reservation committed atomically; an integrating processor must still obtain the single winning CONSUME transition and fresh exact-bound permit claim before an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.
+        mandate:
+          oneOf:
+          - $ref: '#/components/schemas/MandateBinding'
+          - type: 'null'
+    MandateBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - version
+      - policy_hash
+      - source
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        policy_hash:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        source:
+          const: ACCOUNT_REGISTRY
     Finding:
       type: object
       additionalProperties: false
@@ -673,58 +700,27 @@ components:
           type:
           - string
           - 'null'
-    LegalAcceptanceRequiredError:
-      type: object
-      additionalProperties: false
-      required:
-      - error
-      - code
-      - terms_version
-      - acceptance_url
-      properties:
-        error:
-          type: string
-        code:
-          const: LEGAL_ACCEPTANCE_REQUIRED
-        terms_version:
-          type: string
-          const: 2026-07-28.2
-        acceptance_url:
-          type: string
-          format: uri
-          const: https://mandateshield.com/dashboard?legal=required
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
   responses:
-    LegalAcceptanceRequired:
-      description: The authenticated live account has not accepted the current business agreements
+    TooLarge:
+      description: Request exceeds the endpoint size limit
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
+            $ref: '#/components/schemas/Error'
     Unauthorized:
       description: API key is missing, invalid or revoked
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: Invalid JSON, shape or parameter
+    LegalAcceptanceRequired:
+      description: The authenticated live account has not accepted the current business agreements
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-    TooLarge:
-      description: Request exceeds the endpoint size limit
+            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
+    BadRequest:
+      description: Invalid JSON, shape or parameter
       content:
         application/json:
           schema:
@@ -740,9 +736,6 @@ components:
       scheme: bearer
       bearerFormat: ms_test_… or ms_live_…
       description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
-x-refined-from:
-- mandateshield-com-openapi.json
-- mandateshield-com-openapi.yml
 x-mandateshield-release:
   product_version: 1.13.0
   openapi_version: 3.4.0

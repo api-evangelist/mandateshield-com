@@ -1,13 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Mandateshield Com Deployment activation proofs API
+  title: MandateShield Payment Authority Deployment activation…
   version: 3.4.0
+  description: Fail-closed authority verification, provider-bound execution permits and provider-outcome reconciliation that is caller-report-independent for autonomous AI-agent purchases.
+  termsOfService: https://mandateshield.com/terms
   contact:
     name: Gökhan Vodinali · MandateShield operator
     url: https://mandateshield.com/legal
     email: support@hemelion.com
-  termsOfService: https://mandateshield.com/terms
-  description: 'Operations tagged Deployment activation proofs across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://mandateshield.com
 tags:
@@ -48,8 +48,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    servers:
-    - url: https://mandateshield.com
   /api/v1/deployment-proofs/{proofId}:
     get:
       operationId: getDeploymentActivationProof
@@ -86,8 +84,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    servers:
-    - url: https://mandateshield.com
   /api/v1/deployment-proofs/{proofId}/badge.svg:
     get:
       operationId: getDeploymentActivationProofBadge
@@ -124,63 +120,197 @@ paths:
             text/plain:
               schema:
                 type: string
-    servers:
-    - url: https://mandateshield.com
 components:
   schemas:
-    DeploymentActivationProofList:
+    DeploymentActivationObservation:
       type: object
       additionalProperties: false
       required:
-      - format
-      - status
-      - proofs
-      - semantics
+      - activation_chain_digest
+      - provider_profile
+      - provider_environment
+      - strict_live_reservation_server_observed
+      - provider_permit_redeemed
+      - mandateshield_provider_submission_observed
+      - mandateshield_provider_enforcement_observed
+      - provider_evidence_recorded
+      - independent_terminal_evidence_verified
       properties:
-        format:
-          const: application/mandateshield-deployment-proof-network+json;v=1
-        status:
+        activation_chain_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        provider_profile:
+          const: GENERIC_HTTP_V1
+        provider_environment:
+          const: test
+        strict_live_reservation_server_observed:
+          const: true
+        provider_permit_redeemed:
+          const: true
+        mandateshield_provider_submission_observed:
+          const: false
+        mandateshield_provider_enforcement_observed:
+          const: false
+        provider_evidence_recorded:
+          const: false
+        independent_terminal_evidence_verified:
+          const: false
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+    DeploymentActivationProofSummary:
+      type: object
+      additionalProperties: false
+      required:
+      - proof_id
+      - attestation_type
+      - subject
+      - binding
+      - activation
+      - eligibility
+      - assurance
+      - issued_at
+      - expires_at
+      - human_uri
+      - proof_uri
+      - badge
+      properties:
+        proof_id:
+          type: string
+          pattern: ^mdp_[a-f0-9]{32}$
+        attestation_type:
+          const: ACCOUNT_BOUND_SERVER_OBSERVED_ACTIVATION
+        subject:
+          $ref: '#/components/schemas/DeploymentActivationSubject'
+        binding:
+          $ref: '#/components/schemas/DeploymentActivationBinding'
+        activation:
+          $ref: '#/components/schemas/DeploymentActivationObservation'
+        eligibility:
+          $ref: '#/components/schemas/DeploymentActivationEligibility'
+        assurance:
+          $ref: '#/components/schemas/DeploymentActivationAssurance'
+        issued_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        human_uri:
+          type: string
+          format: uri
+        proof_uri:
+          type: string
+          format: uri
+        badge:
+          $ref: '#/components/schemas/DeploymentActivationBadge'
+    DeploymentActivationBadge:
+      type: object
+      additionalProperties: false
+      required:
+      - url
+      - alt
+      - markdown
+      properties:
+        url:
+          type: string
+          format: uri
+        alt:
+          const: MandateShield server-observed activation
+        markdown:
+          type: string
+    DeploymentActivationAssurance:
+      type: object
+      additionalProperties: false
+      required:
+      - counts_as_verified_activation
+      - counts_as_customer
+      - counts_as_revenue
+      - deployment_runtime_inspected
+      - non_bypassability_verified
+      - independent_organization_verified
+      - audit
+      - certification
+      - security_guarantee
+      - non_authorizing
+      - observation_scope
+      properties:
+        counts_as_verified_activation:
+          const: true
+        counts_as_customer:
+          const: false
+        counts_as_revenue:
+          const: false
+        deployment_runtime_inspected:
+          const: false
+        non_bypassability_verified:
+          const: false
+        independent_organization_verified:
+          const: false
+        audit:
+          const: false
+        certification:
+          const: false
+        security_guarantee:
+          const: false
+        non_authorizing:
+          const: true
+        observation_scope:
+          const: MandateShield observed no provider submission or provider evidence in this proof flow. Out-of-band activity is outside this proof.
+    DeploymentActivationEligibility:
+      type: object
+      additionalProperties: false
+      required:
+      - classification
+      - policy_digest
+      - evaluated_at
+      - operator_exclusion_no_match_at_evaluation
+      properties:
+        classification:
+          const: ELIGIBLE_EXTERNAL_CANDIDATE
+        policy_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        evaluated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: The recorded eligibility-policy evaluation time when available in the signed proof; final proof issuance does not rerun the exclusion classifier.
+        operator_exclusion_no_match_at_evaluation:
+          const: true
+          description: A no-match against published exclusions at evaluated_at, not an issuance-time recheck or independent identity or ownership verification.
+    DeploymentActivationBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - method
+      - evidence_digest
+      - verified_at
+      - subject_control_verified_at_binding
+      properties:
+        method:
           type: string
           enum:
-          - EMPTY
-          - ACTIVE
-        proofs:
-          type: array
-          maxItems: 50
-          items:
-            $ref: '#/components/schemas/DeploymentActivationProofSummary'
-        semantics:
-          type: object
-          additionalProperties: false
-          required:
-          - entries_are_server_observed_activations
-          - entries_observe_strict_live_reservations
-          - entries_observe_credential_bound_permit_redemptions
-          - entries_establish_payment_submission
-          - entries_establish_provider_enforcement
-          - entries_establish_terminal_provider_evidence
-          - entries_are_customers
-          - entries_are_revenue
-          - entries_are_audits_or_certifications
-          properties:
-            entries_are_server_observed_activations:
-              const: true
-            entries_observe_strict_live_reservations:
-              const: true
-            entries_observe_credential_bound_permit_redemptions:
-              const: true
-            entries_establish_payment_submission:
-              const: false
-            entries_establish_provider_enforcement:
-              const: false
-            entries_establish_terminal_provider_evidence:
-              const: false
-            entries_are_customers:
-              const: false
-            entries_are_revenue:
-              const: false
-            entries_are_audits_or_certifications:
-              const: false
+          - DNS_TXT_CONTROL
+          - GITHUB_COMMIT_FILE
+        evidence_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        verified_at:
+          type: string
+          format: date-time
+          description: The recorded time when subject control was verified. Final proof issuance does not re-verify subject control.
+        subject_control_verified_at_binding:
+          const: true
     DeploymentActivationProof:
       type: object
       additionalProperties: false
@@ -261,77 +391,6 @@ components:
         caveat:
           type: string
           description: Must state the exact positive observations and every material non-claim.
-    DeploymentActivationEligibility:
-      type: object
-      additionalProperties: false
-      required:
-      - classification
-      - policy_digest
-      - evaluated_at
-      - operator_exclusion_no_match_at_evaluation
-      properties:
-        classification:
-          const: ELIGIBLE_EXTERNAL_CANDIDATE
-        policy_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        evaluated_at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: The recorded eligibility-policy evaluation time when available in the signed proof; final proof issuance does not rerun the exclusion classifier.
-        operator_exclusion_no_match_at_evaluation:
-          const: true
-          description: A no-match against published exclusions at evaluated_at, not an issuance-time recheck or independent identity or ownership verification.
-    DeploymentActivationObservation:
-      type: object
-      additionalProperties: false
-      required:
-      - activation_chain_digest
-      - provider_profile
-      - provider_environment
-      - strict_live_reservation_server_observed
-      - provider_permit_redeemed
-      - mandateshield_provider_submission_observed
-      - mandateshield_provider_enforcement_observed
-      - provider_evidence_recorded
-      - independent_terminal_evidence_verified
-      properties:
-        activation_chain_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        provider_profile:
-          const: GENERIC_HTTP_V1
-        provider_environment:
-          const: test
-        strict_live_reservation_server_observed:
-          const: true
-        provider_permit_redeemed:
-          const: true
-        mandateshield_provider_submission_observed:
-          const: false
-        mandateshield_provider_enforcement_observed:
-          const: false
-        provider_evidence_recorded:
-          const: false
-        independent_terminal_evidence_verified:
-          const: false
-    DeploymentActivationBadge:
-      type: object
-      additionalProperties: false
-      required:
-      - url
-      - alt
-      - markdown
-      properties:
-        url:
-          type: string
-          format: uri
-        alt:
-          const: MandateShield server-observed activation
-        markdown:
-          type: string
     DeploymentActivationSubject:
       type: object
       additionalProperties: false
@@ -358,124 +417,59 @@ components:
           - string
           - 'null'
           pattern: ^[a-f0-9]{40}$
-    DeploymentActivationBinding:
+    DeploymentActivationProofList:
       type: object
       additionalProperties: false
       required:
-      - method
-      - evidence_digest
-      - verified_at
-      - subject_control_verified_at_binding
+      - format
+      - status
+      - proofs
+      - semantics
       properties:
-        method:
+        format:
+          const: application/mandateshield-deployment-proof-network+json;v=1
+        status:
           type: string
           enum:
-          - DNS_TXT_CONTROL
-          - GITHUB_COMMIT_FILE
-        evidence_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        verified_at:
-          type: string
-          format: date-time
-          description: The recorded time when subject control was verified. Final proof issuance does not re-verify subject control.
-        subject_control_verified_at_binding:
-          const: true
-    DeploymentActivationProofSummary:
-      type: object
-      additionalProperties: false
-      required:
-      - proof_id
-      - attestation_type
-      - subject
-      - binding
-      - activation
-      - eligibility
-      - assurance
-      - issued_at
-      - expires_at
-      - human_uri
-      - proof_uri
-      - badge
-      properties:
-        proof_id:
-          type: string
-          pattern: ^mdp_[a-f0-9]{32}$
-        attestation_type:
-          const: ACCOUNT_BOUND_SERVER_OBSERVED_ACTIVATION
-        subject:
-          $ref: '#/components/schemas/DeploymentActivationSubject'
-        binding:
-          $ref: '#/components/schemas/DeploymentActivationBinding'
-        activation:
-          $ref: '#/components/schemas/DeploymentActivationObservation'
-        eligibility:
-          $ref: '#/components/schemas/DeploymentActivationEligibility'
-        assurance:
-          $ref: '#/components/schemas/DeploymentActivationAssurance'
-        issued_at:
-          type: string
-          format: date-time
-        expires_at:
-          type: string
-          format: date-time
-        human_uri:
-          type: string
-          format: uri
-        proof_uri:
-          type: string
-          format: uri
-        badge:
-          $ref: '#/components/schemas/DeploymentActivationBadge'
-    DeploymentActivationAssurance:
-      type: object
-      additionalProperties: false
-      required:
-      - counts_as_verified_activation
-      - counts_as_customer
-      - counts_as_revenue
-      - deployment_runtime_inspected
-      - non_bypassability_verified
-      - independent_organization_verified
-      - audit
-      - certification
-      - security_guarantee
-      - non_authorizing
-      - observation_scope
-      properties:
-        counts_as_verified_activation:
-          const: true
-        counts_as_customer:
-          const: false
-        counts_as_revenue:
-          const: false
-        deployment_runtime_inspected:
-          const: false
-        non_bypassability_verified:
-          const: false
-        independent_organization_verified:
-          const: false
-        audit:
-          const: false
-        certification:
-          const: false
-        security_guarantee:
-          const: false
-        non_authorizing:
-          const: true
-        observation_scope:
-          const: MandateShield observed no provider submission or provider evidence in this proof flow. Out-of-band activity is outside this proof.
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
+          - EMPTY
+          - ACTIVE
+        proofs:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/DeploymentActivationProofSummary'
+        semantics:
+          type: object
+          additionalProperties: false
+          required:
+          - entries_are_server_observed_activations
+          - entries_observe_strict_live_reservations
+          - entries_observe_credential_bound_permit_redemptions
+          - entries_establish_payment_submission
+          - entries_establish_provider_enforcement
+          - entries_establish_terminal_provider_evidence
+          - entries_are_customers
+          - entries_are_revenue
+          - entries_are_audits_or_certifications
+          properties:
+            entries_are_server_observed_activations:
+              const: true
+            entries_observe_strict_live_reservations:
+              const: true
+            entries_observe_credential_bound_permit_redemptions:
+              const: true
+            entries_establish_payment_submission:
+              const: false
+            entries_establish_provider_enforcement:
+              const: false
+            entries_establish_terminal_provider_evidence:
+              const: false
+            entries_are_customers:
+              const: false
+            entries_are_revenue:
+              const: false
+            entries_are_audits_or_certifications:
+              const: false
   responses:
     BadRequest:
       description: Invalid JSON, shape or parameter
@@ -494,9 +488,6 @@ components:
       scheme: bearer
       bearerFormat: ms_test_… or ms_live_…
       description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
-x-refined-from:
-- mandateshield-com-openapi.json
-- mandateshield-com-openapi.yml
 x-mandateshield-release:
   product_version: 1.13.0
   openapi_version: 3.4.0

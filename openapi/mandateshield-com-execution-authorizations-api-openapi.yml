@@ -1,13 +1,13 @@
 openapi: 3.2.0
 info:
-  title: Mandateshield Com Execution Authorizations API
+  title: MandateShield Payment Authority Execution Authorizations API
   version: 3.4.0
+  description: Fail-closed authority verification, provider-bound execution permits and provider-outcome reconciliation that is caller-report-independent for autonomous AI-agent purchases.
+  termsOfService: https://mandateshield.com/terms
   contact:
     name: Gökhan Vodinali · MandateShield operator
     url: https://mandateshield.com/legal
     email: support@hemelion.com
-  termsOfService: https://mandateshield.com/terms
-  description: 'Operations tagged Execution Authorizations across 2 of this provider''s published API definitions: mandateshield-com-openapi.json, mandateshield-com-openapi.yml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: https://mandateshield.com
 tags:
@@ -22,8 +22,6 @@ paths:
           description: CORS pre-flight accepted
       tags:
       - Execution Authorizations
-    servers:
-    - url: https://mandateshield.com
 components:
   securitySchemes:
     hostingSession:
@@ -36,9 +34,6 @@ components:
       scheme: bearer
       bearerFormat: ms_test_… or ms_live_…
       description: Keep API keys server-side and isolate them by purpose. VERIFY keys can issue challenges and strict decisions. Paid live PROCESSOR keys are bound to one processor_audience and can call only the execution-transition boundary.
-x-refined-from:
-- mandateshield-com-openapi.json
-- mandateshield-com-openapi.yml
 x-mandateshield-release:
   product_version: 1.13.0
   openapi_version: 3.4.0
