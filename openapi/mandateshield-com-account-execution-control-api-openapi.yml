@@ -125,84 +125,6 @@ components:
           type: string
         enforcement_authorized:
           type: boolean
-    ExecutionInterlockMutationStatus:
-      type: object
-      additionalProperties: false
-      required:
-      - contract
-      - state
-      - execution_allowed
-      - integrity
-      - generation
-      - last_event_id
-      - changed_at
-      - paused_at
-      - blocked_when_paused
-      - remains_available
-      - scope
-      - limitation
-      - changed
-      - already_effective
-      properties:
-        contract:
-          type: string
-          format: uri
-          const: https://mandateshield.com/specifications/global-execution-interlock/v1
-        state:
-          type: string
-          enum:
-          - RUNNING
-          - PAUSED
-        execution_allowed:
-          type: boolean
-        integrity:
-          type: string
-          enum:
-          - VERIFIED
-          - FAIL_CLOSED
-        generation:
-          type:
-          - integer
-          - 'null'
-          minimum: 0
-        last_event_id:
-          type:
-          - string
-          - 'null'
-        changed_at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-        paused_at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-        blocked_when_paused:
-          type: array
-          prefixItems:
-          - const: STRICT_RESERVATION
-          - const: PROCESSOR_CONSUME
-          - const: EXECUTION_PERMIT_REDEMPTION
-          minItems: 3
-          maxItems: 3
-        remains_available:
-          type: array
-          prefixItems:
-          - const: RECEIPT_VERIFICATION
-          - const: OUTCOME_REPORTING
-          - const: RECONCILIATION
-          minItems: 3
-          maxItems: 3
-        scope:
-          const: ACCOUNT_WIDE_MANDATESHIELD_MEDIATED
-        limitation:
-          type: string
-        changed:
-          type: boolean
-        already_effective:
-          type: boolean
     ExecutionInterlockStatus:
       type: object
       additionalProperties: false
@@ -290,6 +212,84 @@ components:
         expected_generation:
           type: integer
           minimum: 0
+    ExecutionInterlockMutationStatus:
+      type: object
+      additionalProperties: false
+      required:
+      - contract
+      - state
+      - execution_allowed
+      - integrity
+      - generation
+      - last_event_id
+      - changed_at
+      - paused_at
+      - blocked_when_paused
+      - remains_available
+      - scope
+      - limitation
+      - changed
+      - already_effective
+      properties:
+        contract:
+          type: string
+          format: uri
+          const: https://mandateshield.com/specifications/global-execution-interlock/v1
+        state:
+          type: string
+          enum:
+          - RUNNING
+          - PAUSED
+        execution_allowed:
+          type: boolean
+        integrity:
+          type: string
+          enum:
+          - VERIFIED
+          - FAIL_CLOSED
+        generation:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+        last_event_id:
+          type:
+          - string
+          - 'null'
+        changed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        paused_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        blocked_when_paused:
+          type: array
+          prefixItems:
+          - const: STRICT_RESERVATION
+          - const: PROCESSOR_CONSUME
+          - const: EXECUTION_PERMIT_REDEMPTION
+          minItems: 3
+          maxItems: 3
+        remains_available:
+          type: array
+          prefixItems:
+          - const: RECEIPT_VERIFICATION
+          - const: OUTCOME_REPORTING
+          - const: RECONCILIATION
+          minItems: 3
+          maxItems: 3
+        scope:
+          const: ACCOUNT_WIDE_MANDATESHIELD_MEDIATED
+        limitation:
+          type: string
+        changed:
+          type: boolean
+        already_effective:
+          type: boolean
   responses:
     BadRequest:
       description: Invalid JSON, shape or parameter

@@ -272,45 +272,53 @@ paths:
           $ref: '#/components/responses/TooLarge'
 components:
   schemas:
-    ExecutionReceiptVerification:
+    ExecutionPayeeBinding:
       type: object
       additionalProperties: false
       required:
-      - cryptographically_valid
-      - context_matched
-      - protected_header
-      - claims
-      - historical_evidence_only
-      - execution_authorized
-      - independent_verification
+      - merchant_id
+      - destination
+      - destination_digest
       properties:
-        cryptographically_valid:
-          const: true
-        context_matched:
-          type: boolean
-          description: True only when expected_audience was supplied and matched exactly.
-        protected_header:
-          $ref: '#/components/schemas/ExecutionReceiptProtectedHeader'
-        claims:
-          $ref: '#/components/schemas/ExecutionReceiptClaims'
-        historical_evidence_only:
-          const: true
-        execution_authorized:
-          const: false
-        independent_verification:
-          type: boolean
-          description: Matches the legacy claims.independent_verification field. True means MandateShield checked configured evidence without trusting the caller report; it does not mean verification by an independent organization, audit, or certification.
-    Error:
+        merchant_id:
+          type: string
+          minLength: 1
+          maxLength: 240
+        destination:
+          type: string
+          minLength: 1
+          maxLength: 500
+        destination_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+    ProviderSubmissionState:
+      type: string
+      enum:
+      - PREPARED
+      - SUBMITTING
+      - ACKNOWLEDGED
+      - UNKNOWN
+      - SETTLED
+      - FAILED_CONFIRMED
+      - CONFLICT
+      - PENDING
+    ExecutionPermitVerificationRequest:
       type: object
+      additionalProperties: false
       required:
-      - error
+      - compact
       properties:
-        error:
+        compact:
           type: string
-        code:
+          minLength: 1
+          maxLength: 20000
+        expected_audience:
           type: string
-        enforcement_authorized:
-          type: boolean
+          minLength: 1
+          maxLength: 240
+          description: Optional exact string comparison. Audience arrays and wildcard matching are not supported.
+    ExecutionReceiptClaims:
+      $ref: https://mandateshield.com/schemas/execution-receipt-v1.json
     ExecutionPermitVerification:
       type: object
       additionalProperties: false
@@ -344,106 +352,114 @@ components:
           const: false
         redemption_uri:
           const: https://mandateshield.com/api/v2/execution-permits/redeem
-    ExecutionAmountBinding:
-      oneOf:
-      - type: object
-        additionalProperties: false
-        required:
-        - mode
-        - minor_units
-        - currency
-        properties:
-          mode:
-            const: ISO_4217
-          minor_units:
-            type: integer
-            minimum: 1
-            maximum: 9007199254740991
-          currency:
-            type: string
-            pattern: ^[A-Z]{3}$
-      - type: object
-        additionalProperties: false
-        required:
-        - mode
-        - atomic_units
-        - asset_decimals
-        - asset_id
-        - network
-        properties:
-          mode:
-            const: ATOMIC_ASSET
-          atomic_units:
-            type: string
-            pattern: ^[1-9][0-9]{0,77}$
-          asset_decimals:
-            type: integer
-            minimum: 0
-            maximum: 30
-          asset_id:
-            type: string
-            minLength: 1
-            maxLength: 500
-          network:
-            type: string
-            minLength: 1
-            maxLength: 240
-    ProviderSubmissionReportRequest:
+    LegalAcceptanceRequiredError:
       type: object
       additionalProperties: false
       required:
-      - provider_submission_id
-      - permit_id
-      - claim_id
-      - payment_reference
-      - outcome
-      - occurred_at
+      - error
+      - code
+      - terms_version
+      - acceptance_url
       properties:
-        provider_submission_id:
-          $ref: '#/components/schemas/ProviderSubmissionId'
-        permit_id:
+        error:
           type: string
-          pattern: ^msp_[a-f0-9]{32}$
-        claim_id:
+        code:
+          const: LEGAL_ACCEPTANCE_REQUIRED
+        terms_version:
           type: string
-          pattern: ^mspc_[a-f0-9]{32}$
-        payment_reference:
+          const: 2026-07-28.2
+        acceptance_url:
+          type: string
+          format: uri
+          const: https://mandateshield.com/dashboard?legal=required
+    ProviderEvidenceClass:
+      type: string
+      enum:
+      - CALLER_ASSERTED
+      - FACILITATOR_SIGNED
+      - PROVIDER_API_VERIFIED
+      - CHAIN_FINALIZED
+      - UNRESOLVED
+      - LEDGER_DERIVED
+      description: PROVIDER_API_VERIFIED and CHAIN_FINALIZED are the current hosted terminal evidence classes checked without trusting the caller report. FACILITATOR_SIGNED is a retained evidence class for separately configured integrations and does not imply current provider/facilitator adoption. No class claims verification by an independent organization, audit or certification. LEDGER_DERIVED is used by execution receipts, not ProviderEvidence rows.
+    ExecutionProviderBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - profile
+      - environment
+      - account
+      - request_id
+      - request_digest
+      - idempotency_key
+      properties:
+        profile:
+          type: string
+          enum:
+          - GENERIC_HTTP_V1
+          - STRIPE_PAYMENT_INTENTS_V1
+          - X402_V2_EXACT
+          - MPP_CHARGE_V1
+        environment:
+          type: string
+          enum:
+          - test
+          - live
+        account:
           type: string
           minLength: 1
           maxLength: 240
-        outcome:
+        request_id:
           type: string
-          enum:
-          - COMMITTED
-          - FAILED
-          - PENDING
-          - UNKNOWN
-          description: Caller observation only. It never permits a terminal transition until configured evidence is checked without trusting that observation.
-        occurred_at:
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+        request_digest:
           type: string
-          format: date-time
-          description: Caller observation time. The hosted endpoint accepts only its bounded freshness window.
-        provider_observation:
-          type: object
-          description: Optional bounded non-secret provider projection. Payment credentials, provider secrets and private keys are forbidden.
-    ExecutionExpectedRequest:
+          pattern: ^sha256:[a-f0-9]{64}$
+        idempotency_key:
+          type: string
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+    ExecutionReceiptVerificationRequest:
       type: object
       additionalProperties: false
       required:
-      - provider
-      - payee
-      - amount
-      - resource
+      - compact
       properties:
-        provider:
-          $ref: '#/components/schemas/ExecutionProviderBinding'
-        payee:
-          $ref: '#/components/schemas/ExecutionPayeeBinding'
-        amount:
-          $ref: '#/components/schemas/ExecutionAmountBinding'
-        resource:
-          $ref: '#/components/schemas/ExecutionResourceBinding'
-      description: Exact signed request projection. Every field is compared against the permit; no caller-supplied provider identity overrides the authenticated PROCESSOR audience.
+        compact:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        expected_audience:
+          type: string
+          minLength: 1
+          maxLength: 240
+    ExecutionReceiptVerification:
+      type: object
+      additionalProperties: false
+      required:
+      - cryptographically_valid
+      - context_matched
+      - protected_header
+      - claims
+      - historical_evidence_only
+      - execution_authorized
+      - independent_verification
+      properties:
+        cryptographically_valid:
+          const: true
+        context_matched:
+          type: boolean
+          description: True only when expected_audience was supplied and matched exactly.
+        protected_header:
+          $ref: '#/components/schemas/ExecutionReceiptProtectedHeader'
+        claims:
+          $ref: '#/components/schemas/ExecutionReceiptClaims'
+        historical_evidence_only:
+          const: true
+        execution_authorized:
+          const: false
+        independent_verification:
+          type: boolean
+          description: Matches the legacy claims.independent_verification field. True means MandateShield checked configured evidence without trusting the caller report; it does not mean verification by an independent organization, audit, or certification.
     ProviderSubmissionReportResult:
       type: object
       additionalProperties: false
@@ -560,186 +576,6 @@ components:
               type: 'null'
             execution_receipt:
               type: 'null'
-    ExecutionPermitVerificationRequest:
-      type: object
-      additionalProperties: false
-      required:
-      - compact
-      properties:
-        compact:
-          type: string
-          minLength: 1
-          maxLength: 20000
-        expected_audience:
-          type: string
-          minLength: 1
-          maxLength: 240
-          description: Optional exact string comparison. Audience arrays and wildcard matching are not supported.
-    ExecutionPermitRedemptionRequest:
-      type: object
-      additionalProperties: false
-      required:
-      - compact
-      - expected_request
-      properties:
-        compact:
-          type: string
-          minLength: 1
-          maxLength: 20000
-        expected_request:
-          $ref: '#/components/schemas/ExecutionExpectedRequest'
-        idempotency_key:
-          type: string
-          pattern: ^[A-Za-z0-9._:~-]{1,256}$
-          description: Required when Idempotency-Key is absent; must be identical when both forms are supplied.
-    ExecutionPermitProtectedHeader:
-      type: object
-      additionalProperties: false
-      required:
-      - alg
-      - kid
-      - typ
-      properties:
-        alg:
-          const: ES256
-        kid:
-          type: string
-          minLength: 1
-          maxLength: 240
-        typ:
-          const: MSP+JWT
-    ProviderSubmissionState:
-      type: string
-      enum:
-      - PREPARED
-      - SUBMITTING
-      - ACKNOWLEDGED
-      - UNKNOWN
-      - SETTLED
-      - FAILED_CONFIRMED
-      - CONFLICT
-      - PENDING
-    ExecutionPayeeBinding:
-      type: object
-      additionalProperties: false
-      required:
-      - merchant_id
-      - destination
-      - destination_digest
-      properties:
-        merchant_id:
-          type: string
-          minLength: 1
-          maxLength: 240
-        destination:
-          type: string
-          minLength: 1
-          maxLength: 500
-        destination_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-    ExecutionResourceBinding:
-      type: object
-      additionalProperties: false
-      required:
-      - method
-      - uri
-      - body_digest
-      properties:
-        method:
-          type: string
-          pattern: ^[A-Z][A-Z0-9!#$%&'*+.^_`|~-]{0,31}$
-        uri:
-          type: string
-          format: uri
-          pattern: ^https://
-          maxLength: 2048
-        body_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-    ExecutionReceiptVerificationRequest:
-      type: object
-      additionalProperties: false
-      required:
-      - compact
-      properties:
-        compact:
-          type: string
-          minLength: 1
-          maxLength: 20000
-        expected_audience:
-          type: string
-          minLength: 1
-          maxLength: 240
-    ProviderSubmissionId:
-      type: string
-      pattern: ^psub_[a-f0-9]{32}$
-    ExecutionProviderBinding:
-      type: object
-      additionalProperties: false
-      required:
-      - profile
-      - environment
-      - account
-      - request_id
-      - request_digest
-      - idempotency_key
-      properties:
-        profile:
-          type: string
-          enum:
-          - GENERIC_HTTP_V1
-          - STRIPE_PAYMENT_INTENTS_V1
-          - X402_V2_EXACT
-          - MPP_CHARGE_V1
-        environment:
-          type: string
-          enum:
-          - test
-          - live
-        account:
-          type: string
-          minLength: 1
-          maxLength: 240
-        request_id:
-          type: string
-          pattern: ^[A-Za-z0-9._:~-]{1,256}$
-        request_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        idempotency_key:
-          type: string
-          pattern: ^[A-Za-z0-9._:~-]{1,256}$
-    ExecutionReceiptClaims:
-      $ref: https://mandateshield.com/schemas/execution-receipt-v1.json
-    ExecutionReceiptProtectedHeader:
-      type: object
-      additionalProperties: false
-      required:
-      - alg
-      - kid
-      - typ
-      properties:
-        alg:
-          const: ES256
-        kid:
-          type: string
-          minLength: 1
-          maxLength: 240
-        typ:
-          const: MSE+JWT
-    ProviderEvidenceClass:
-      type: string
-      enum:
-      - CALLER_ASSERTED
-      - FACILITATOR_SIGNED
-      - PROVIDER_API_VERIFIED
-      - CHAIN_FINALIZED
-      - UNRESOLVED
-      - LEDGER_DERIVED
-      description: PROVIDER_API_VERIFIED and CHAIN_FINALIZED are the current hosted terminal evidence classes checked without trusting the caller report. FACILITATOR_SIGNED is a retained evidence class for separately configured integrations and does not imply current provider/facilitator adoption. No class claims verification by an independent organization, audit or certification. LEDGER_DERIVED is used by execution receipts, not ProviderEvidence rows.
-    ExecutionPermitClaims:
-      $ref: https://mandateshield.com/schemas/execution-permit-v1.json
     SignedExecutionReceipt:
       type: object
       additionalProperties: false
@@ -782,26 +618,79 @@ components:
           type: boolean
           description: Legacy field name. True means configured evidence was checked without trusting the caller report; it does not mean verification by an independent organization, audit, certification, or provider adoption.
       description: Historical terminal-state evidence. The signed artifact never grants a new provider submission and does not upgrade the evidence_class.
-    LegalAcceptanceRequiredError:
+    ExecutionPermitClaims:
+      $ref: https://mandateshield.com/schemas/execution-permit-v1.json
+    ProviderSubmissionReportRequest:
       type: object
       additionalProperties: false
       required:
+      - provider_submission_id
+      - permit_id
+      - claim_id
+      - payment_reference
+      - outcome
+      - occurred_at
+      properties:
+        provider_submission_id:
+          $ref: '#/components/schemas/ProviderSubmissionId'
+        permit_id:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+        claim_id:
+          type: string
+          pattern: ^mspc_[a-f0-9]{32}$
+        payment_reference:
+          type: string
+          minLength: 1
+          maxLength: 240
+        outcome:
+          type: string
+          enum:
+          - COMMITTED
+          - FAILED
+          - PENDING
+          - UNKNOWN
+          description: Caller observation only. It never permits a terminal transition until configured evidence is checked without trusting that observation.
+        occurred_at:
+          type: string
+          format: date-time
+          description: Caller observation time. The hosted endpoint accepts only its bounded freshness window.
+        provider_observation:
+          type: object
+          description: Optional bounded non-secret provider projection. Payment credentials, provider secrets and private keys are forbidden.
+    ExecutionResourceBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - method
+      - uri
+      - body_digest
+      properties:
+        method:
+          type: string
+          pattern: ^[A-Z][A-Z0-9!#$%&'*+.^_`|~-]{0,31}$
+        uri:
+          type: string
+          format: uri
+          pattern: ^https://
+          maxLength: 2048
+        body_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+    ProviderSubmissionId:
+      type: string
+      pattern: ^psub_[a-f0-9]{32}$
+    Error:
+      type: object
+      required:
       - error
-      - code
-      - terms_version
-      - acceptance_url
       properties:
         error:
           type: string
         code:
-          const: LEGAL_ACCEPTANCE_REQUIRED
-        terms_version:
           type: string
-          const: 2026-07-28.2
-        acceptance_url:
-          type: string
-          format: uri
-          const: https://mandateshield.com/dashboard?legal=required
+        enforcement_authorized:
+          type: boolean
     ProviderEvidenceId:
       type: string
       pattern: ^pevd_[a-f0-9]{32}$
@@ -913,13 +802,124 @@ components:
             const: true
           provider_submission_permitted:
             const: false
+    ExecutionExpectedRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - provider
+      - payee
+      - amount
+      - resource
+      properties:
+        provider:
+          $ref: '#/components/schemas/ExecutionProviderBinding'
+        payee:
+          $ref: '#/components/schemas/ExecutionPayeeBinding'
+        amount:
+          $ref: '#/components/schemas/ExecutionAmountBinding'
+        resource:
+          $ref: '#/components/schemas/ExecutionResourceBinding'
+      description: Exact signed request projection. Every field is compared against the permit; no caller-supplied provider identity overrides the authenticated PROCESSOR audience.
+    ExecutionAmountBinding:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+        - mode
+        - minor_units
+        - currency
+        properties:
+          mode:
+            const: ISO_4217
+          minor_units:
+            type: integer
+            minimum: 1
+            maximum: 9007199254740991
+          currency:
+            type: string
+            pattern: ^[A-Z]{3}$
+      - type: object
+        additionalProperties: false
+        required:
+        - mode
+        - atomic_units
+        - asset_decimals
+        - asset_id
+        - network
+        properties:
+          mode:
+            const: ATOMIC_ASSET
+          atomic_units:
+            type: string
+            pattern: ^[1-9][0-9]{0,77}$
+          asset_decimals:
+            type: integer
+            minimum: 0
+            maximum: 30
+          asset_id:
+            type: string
+            minLength: 1
+            maxLength: 500
+          network:
+            type: string
+            minLength: 1
+            maxLength: 240
+    ExecutionPermitProtectedHeader:
+      type: object
+      additionalProperties: false
+      required:
+      - alg
+      - kid
+      - typ
+      properties:
+        alg:
+          const: ES256
+        kid:
+          type: string
+          minLength: 1
+          maxLength: 240
+        typ:
+          const: MSP+JWT
+    ExecutionPermitRedemptionRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - compact
+      - expected_request
+      properties:
+        compact:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        expected_request:
+          $ref: '#/components/schemas/ExecutionExpectedRequest'
+        idempotency_key:
+          type: string
+          pattern: ^[A-Za-z0-9._:~-]{1,256}$
+          description: Required when Idempotency-Key is absent; must be identical when both forms are supplied.
+    ExecutionReceiptProtectedHeader:
+      type: object
+      additionalProperties: false
+      required:
+      - alg
+      - kid
+      - typ
+      properties:
+        alg:
+          const: ES256
+        kid:
+          type: string
+          minLength: 1
+          maxLength: 240
+        typ:
+          const: MSE+JWT
   responses:
-    LegalAcceptanceRequired:
-      description: The authenticated live account has not accepted the current business agreements
+    Unauthorized:
+      description: API key is missing, invalid or revoked
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
+            $ref: '#/components/schemas/Error'
     TooLarge:
       description: Request exceeds the endpoint size limit
       content:
@@ -932,12 +932,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: API key is missing, invalid or revoked
+    LegalAcceptanceRequired:
+      description: The authenticated live account has not accepted the current business agreements
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
   securitySchemes:
     hostingSession:
       type: apiKey

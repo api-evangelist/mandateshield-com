@@ -108,6 +108,55 @@ paths:
           $ref: '#/components/responses/BadRequest'
 components:
   schemas:
+    Finding:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - message
+      - severity
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum:
+          - high
+          - medium
+          - low
+    Risk:
+      type: object
+      required:
+      - level
+      - requested_value
+      - mandate_headroom
+      - blocked_value
+      - primary_reason
+      properties:
+        level:
+          type: string
+          enum:
+          - CLEAR
+          - GUARDED
+          - ELEVATED
+          - CRITICAL
+        requested_value:
+          type:
+          - number
+          - 'null'
+        mandate_headroom:
+          type:
+          - number
+          - 'null'
+        blocked_value:
+          type: number
+          minimum: 0
+        primary_reason:
+          type:
+          - string
+          - 'null'
     LegalAcceptanceRequiredError:
       type: object
       additionalProperties: false
@@ -128,6 +177,25 @@ components:
           type: string
           format: uri
           const: https://mandateshield.com/dashboard?legal=required
+    MandateBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - version
+      - policy_hash
+      - source
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        policy_hash:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        source:
+          const: ACCOUNT_REGISTRY
     Error:
       type: object
       required:
@@ -139,6 +207,93 @@ components:
           type: string
         enforcement_authorized:
           type: boolean
+    AnalysisDecision:
+      allOf:
+      - $ref: '#/components/schemas/PreflightDecision'
+      - type: object
+        required:
+        - enforcement_authorized
+        properties:
+          enforcement_authorized:
+            const: false
+            description: The v1 analysis profile never authorizes execution.
+    PreflightDecision:
+      type: object
+      required:
+      - decision
+      - score
+      - receipt
+      - checked_at
+      - protocol
+      - findings
+      - risk
+      - recommended_action
+      - controls
+      - mode
+      - persisted
+      - enforcement_authorized
+      properties:
+        decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        policy_decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Deterministic control-coverage indicator, not a calibrated probability of fraud or loss.
+        receipt:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        checked_at:
+          type: string
+          format: date-time
+        protocol:
+          type: string
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+        risk:
+          $ref: '#/components/schemas/Risk'
+        recommended_action:
+          type: string
+        controls:
+          type: object
+          required:
+          - evaluated
+          - passed
+          properties:
+            evaluated:
+              type: integer
+              minimum: 0
+            passed:
+              type: integer
+              minimum: 0
+        mode:
+          type: string
+          enum:
+          - sandbox
+          - test
+          - live
+          - strict
+        persisted:
+          type: boolean
+        enforcement_authorized:
+          type: boolean
+          description: Always false for v1. In strict v2, true means a short-lived execution reservation committed atomically; an integrating processor must still obtain the single winning CONSUME transition and fresh exact-bound permit claim before an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.
+        mandate:
+          oneOf:
+          - $ref: '#/components/schemas/MandateBinding'
+          - type: 'null'
     PurchaseEnvelope:
       type: object
       additionalProperties: true
@@ -545,180 +700,25 @@ components:
               required:
               - atomic_units
               - asset_decimals
-    AnalysisDecision:
-      allOf:
-      - $ref: '#/components/schemas/PreflightDecision'
-      - type: object
-        required:
-        - enforcement_authorized
-        properties:
-          enforcement_authorized:
-            const: false
-            description: The v1 analysis profile never authorizes execution.
-    PreflightDecision:
-      type: object
-      required:
-      - decision
-      - score
-      - receipt
-      - checked_at
-      - protocol
-      - findings
-      - risk
-      - recommended_action
-      - controls
-      - mode
-      - persisted
-      - enforcement_authorized
-      properties:
-        decision:
-          type: string
-          enum:
-          - ALLOW
-          - REVIEW
-          - BLOCK
-        policy_decision:
-          type: string
-          enum:
-          - ALLOW
-          - REVIEW
-          - BLOCK
-        score:
-          type: integer
-          minimum: 0
-          maximum: 100
-          description: Deterministic control-coverage indicator, not a calibrated probability of fraud or loss.
-        receipt:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        checked_at:
-          type: string
-          format: date-time
-        protocol:
-          type: string
-        findings:
-          type: array
-          items:
-            $ref: '#/components/schemas/Finding'
-        risk:
-          $ref: '#/components/schemas/Risk'
-        recommended_action:
-          type: string
-        controls:
-          type: object
-          required:
-          - evaluated
-          - passed
-          properties:
-            evaluated:
-              type: integer
-              minimum: 0
-            passed:
-              type: integer
-              minimum: 0
-        mode:
-          type: string
-          enum:
-          - sandbox
-          - test
-          - live
-          - strict
-        persisted:
-          type: boolean
-        enforcement_authorized:
-          type: boolean
-          description: Always false for v1. In strict v2, true means a short-lived execution reservation committed atomically; an integrating processor must still obtain the single winning CONSUME transition and fresh exact-bound permit claim before an idempotent provider request. MandateShield does not guarantee exactly-once provider delivery.
-        mandate:
-          oneOf:
-          - $ref: '#/components/schemas/MandateBinding'
-          - type: 'null'
-    MandateBinding:
-      type: object
-      additionalProperties: false
-      required:
-      - id
-      - version
-      - policy_hash
-      - source
-      properties:
-        id:
-          type: string
-        version:
-          type: integer
-          minimum: 1
-        policy_hash:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        source:
-          const: ACCOUNT_REGISTRY
-    Finding:
-      type: object
-      additionalProperties: false
-      required:
-      - code
-      - message
-      - severity
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        severity:
-          type: string
-          enum:
-          - high
-          - medium
-          - low
-    Risk:
-      type: object
-      required:
-      - level
-      - requested_value
-      - mandate_headroom
-      - blocked_value
-      - primary_reason
-      properties:
-        level:
-          type: string
-          enum:
-          - CLEAR
-          - GUARDED
-          - ELEVATED
-          - CRITICAL
-        requested_value:
-          type:
-          - number
-          - 'null'
-        mandate_headroom:
-          type:
-          - number
-          - 'null'
-        blocked_value:
-          type: number
-          minimum: 0
-        primary_reason:
-          type:
-          - string
-          - 'null'
   responses:
-    TooLarge:
-      description: Request exceeds the endpoint size limit
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: API key is missing, invalid or revoked
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     LegalAcceptanceRequired:
       description: The authenticated live account has not accepted the current business agreements
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/LegalAcceptanceRequiredError'
+    Unauthorized:
+      description: API key is missing, invalid or revoked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooLarge:
+      description: Request exceeds the endpoint size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     BadRequest:
       description: Invalid JSON, shape or parameter
       content:

@@ -82,6 +82,56 @@ paths:
                 $ref: '#/components/schemas/Error'
 components:
   schemas:
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+    TransparencyRecord:
+      type: object
+      additionalProperties: false
+      required:
+      - receipt_id
+      - receipt_hash
+      - input_digest
+      - decision_digest
+      - decision
+      - protocol
+      - key_id
+      - issued_at
+      properties:
+        receipt_id:
+          type: string
+          pattern: ^msr_[a-f0-9]{32}$
+        receipt_hash:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        input_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        decision_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        decision:
+          type: string
+          enum:
+          - ALLOW
+          - REVIEW
+          - BLOCK
+          - UNKNOWN
+        protocol:
+          type: string
+        key_id:
+          type: string
+        issued_at:
+          type: string
+          format: date-time
     ReceiptVerification:
       type: object
       required:
@@ -145,56 +195,6 @@ components:
         enforcement_ready:
           type: boolean
           description: True only when signed execution authority is unexpired and active, the expected envelope and audience match, and the retained public transparency and private execution-audit records match.
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
-    TransparencyRecord:
-      type: object
-      additionalProperties: false
-      required:
-      - receipt_id
-      - receipt_hash
-      - input_digest
-      - decision_digest
-      - decision
-      - protocol
-      - key_id
-      - issued_at
-      properties:
-        receipt_id:
-          type: string
-          pattern: ^msr_[a-f0-9]{32}$
-        receipt_hash:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        input_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        decision_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        decision:
-          type: string
-          enum:
-          - ALLOW
-          - REVIEW
-          - BLOCK
-          - UNKNOWN
-        protocol:
-          type: string
-        key_id:
-          type: string
-        issued_at:
-          type: string
-          format: date-time
   responses:
     BadRequest:
       description: Invalid JSON, shape or parameter

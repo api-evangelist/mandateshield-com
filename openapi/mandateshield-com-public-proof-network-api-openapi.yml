@@ -291,17 +291,34 @@ components:
               const: false
             non_authorizing:
               const: true
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
+    PublicProofSubjectInput:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+        - kind
+        - uri
+        properties:
+          kind:
+            const: https-domain
+          uri:
+            type: string
+            format: uri
+            pattern: ^https://
+            maxLength: 512
+      - type: object
+        additionalProperties: false
+        required:
+        - kind
+        - uri
+        properties:
+          kind:
+            const: github-repository
+          uri:
+            type: string
+            format: uri
+            pattern: ^https://github\.com/[^/]+/[^/]+/?$
+            maxLength: 512
     PublicProofAttestationRequest:
       type: object
       additionalProperties: false
@@ -320,17 +337,129 @@ components:
         publisher_terms_accepted:
           const: true
           description: Required affirmative acceptance of subject-control, publication-rights, correction, expiry, revocation and takedown rules.
-    PublicProofChallengeRequest:
+    PublicProofSummary:
+      type: object
+      additionalProperties: true
+      required:
+      - proof_id
+      - attestation_type
+      - subject
+      - binding
+      - conformance
+      - hosted_sandbox
+      - counts_as_user
+      - issued_at
+      - proof_uri
+      - badge
+      properties:
+        proof_id:
+          type: string
+          pattern: ^msp_[a-f0-9]{32}$
+        attestation_type:
+          const: EXTERNALLY_BOUND_SELF_REPORT
+        subject:
+          type: object
+          additionalProperties: true
+        binding:
+          type: object
+          additionalProperties: true
+        conformance:
+          type: object
+          additionalProperties: true
+          required:
+          - result_verification
+          - independently_verified
+          - third_party_conformance
+          - certification
+          properties:
+            result_verification:
+              const: SELF_REPORTED_OUTPUTS_ONLY
+            independently_verified:
+              const: false
+            third_party_conformance:
+              const: false
+            certification:
+              const: false
+        hosted_sandbox:
+          const: false
+        counts_as_user:
+          const: false
+        issued_at:
+          type: string
+          format: date-time
+        proof_uri:
+          type: string
+          format: uri
+        badge:
+          type: object
+          additionalProperties: true
+    PublisherTermsRequiredError:
       type: object
       additionalProperties: false
       required:
-      - subject
-      - report
+      - error
+      - code
       properties:
-        subject:
-          $ref: '#/components/schemas/PublicProofSubjectInput'
-        report:
-          $ref: '#/components/schemas/PublicProofConformanceReport'
+        error:
+          type: string
+        code:
+          const: PUBLISHER_TERMS_REQUIRED
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+    PublicProofNetworkList:
+      type: object
+      additionalProperties: false
+      required:
+      - format
+      - status
+      - proofs
+      - semantics
+      - caveat
+      properties:
+        format:
+          const: application/mandateshield-proof-network+json;v=1
+        status:
+          type: string
+          enum:
+          - EMPTY
+          - ACTIVE
+        proofs:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PublicProofSummary'
+        semantics:
+          type: object
+          additionalProperties: false
+          required:
+          - entries_are_users
+          - entries_are_installations
+          - client_telemetry_included
+          - hosted_sandbox_included
+          - independent_conformance_claimed
+          properties:
+            entries_are_users:
+              const: false
+            entries_are_installations:
+              const: false
+            client_telemetry_included:
+              const: false
+            hosted_sandbox_included:
+              const: false
+            independent_conformance_claimed:
+              const: false
+        caveat:
+          type: string
+          description: Every entry is an externally bound self-report, not a customer, user, installation, certification or independently executed conformance result.
     PublicProofAttestation:
       type: object
       additionalProperties: true
@@ -478,17 +607,17 @@ components:
           type: boolean
         created:
           type: boolean
-    PublisherTermsRequiredError:
+    PublicProofChallengeRequest:
       type: object
       additionalProperties: false
       required:
-      - error
-      - code
+      - subject
+      - report
       properties:
-        error:
-          type: string
-        code:
-          const: PUBLISHER_TERMS_REQUIRED
+        subject:
+          $ref: '#/components/schemas/PublicProofSubjectInput'
+        report:
+          $ref: '#/components/schemas/PublicProofConformanceReport'
     PublicProofConformanceReport:
       type: object
       additionalProperties: false
@@ -563,148 +692,19 @@ components:
                 items:
                   type: string
                   pattern: ^[A-Z][A-Z0-9_]{0,79}$
-    PublicProofSubjectInput:
-      oneOf:
-      - type: object
-        additionalProperties: false
-        required:
-        - kind
-        - uri
-        properties:
-          kind:
-            const: https-domain
-          uri:
-            type: string
-            format: uri
-            pattern: ^https://
-            maxLength: 512
-      - type: object
-        additionalProperties: false
-        required:
-        - kind
-        - uri
-        properties:
-          kind:
-            const: github-repository
-          uri:
-            type: string
-            format: uri
-            pattern: ^https://github\.com/[^/]+/[^/]+/?$
-            maxLength: 512
-    PublicProofNetworkList:
-      type: object
-      additionalProperties: false
-      required:
-      - format
-      - status
-      - proofs
-      - semantics
-      - caveat
-      properties:
-        format:
-          const: application/mandateshield-proof-network+json;v=1
-        status:
-          type: string
-          enum:
-          - EMPTY
-          - ACTIVE
-        proofs:
-          type: array
-          maxItems: 50
-          items:
-            $ref: '#/components/schemas/PublicProofSummary'
-        semantics:
-          type: object
-          additionalProperties: false
-          required:
-          - entries_are_users
-          - entries_are_installations
-          - client_telemetry_included
-          - hosted_sandbox_included
-          - independent_conformance_claimed
-          properties:
-            entries_are_users:
-              const: false
-            entries_are_installations:
-              const: false
-            client_telemetry_included:
-              const: false
-            hosted_sandbox_included:
-              const: false
-            independent_conformance_claimed:
-              const: false
-        caveat:
-          type: string
-          description: Every entry is an externally bound self-report, not a customer, user, installation, certification or independently executed conformance result.
-    PublicProofSummary:
-      type: object
-      additionalProperties: true
-      required:
-      - proof_id
-      - attestation_type
-      - subject
-      - binding
-      - conformance
-      - hosted_sandbox
-      - counts_as_user
-      - issued_at
-      - proof_uri
-      - badge
-      properties:
-        proof_id:
-          type: string
-          pattern: ^msp_[a-f0-9]{32}$
-        attestation_type:
-          const: EXTERNALLY_BOUND_SELF_REPORT
-        subject:
-          type: object
-          additionalProperties: true
-        binding:
-          type: object
-          additionalProperties: true
-        conformance:
-          type: object
-          additionalProperties: true
-          required:
-          - result_verification
-          - independently_verified
-          - third_party_conformance
-          - certification
-          properties:
-            result_verification:
-              const: SELF_REPORTED_OUTPUTS_ONLY
-            independently_verified:
-              const: false
-            third_party_conformance:
-              const: false
-            certification:
-              const: false
-        hosted_sandbox:
-          const: false
-        counts_as_user:
-          const: false
-        issued_at:
-          type: string
-          format: date-time
-        proof_uri:
-          type: string
-          format: uri
-        badge:
-          type: object
-          additionalProperties: true
   responses:
-    TooLarge:
-      description: Request exceeds the endpoint size limit
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     PublisherTermsRequired:
       description: The publisher did not affirmatively accept the public-proof publication rules
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/PublisherTermsRequiredError'
+    TooLarge:
+      description: Request exceeds the endpoint size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     BadRequest:
       description: Invalid JSON, shape or parameter
       content:

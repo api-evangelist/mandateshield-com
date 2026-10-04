@@ -331,6 +331,79 @@ components:
           type: string
         enforcement_authorized:
           type: boolean
+    ProtocolAdapterResult:
+      type: object
+      additionalProperties: false
+      required:
+      - adapter
+      - adapter_version
+      - protocol
+      - source_digest
+      - envelope_digest
+      - envelope
+      - bindings
+      - assurance
+      - next_step
+      - warnings
+      properties:
+        adapter:
+          type: string
+          enum:
+          - AP2_CLOSED_PAYMENT_SD_JWT
+          - X402_V2_PAYMENT_REQUIRED
+          - MPP_HTTP_PAYMENT_CHALLENGE
+        adapter_version:
+          const: 1.0.0
+        protocol:
+          type: string
+          enum:
+          - AP2
+          - X402
+          - MPP
+        source_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        envelope_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        envelope:
+          $ref: '#/components/schemas/PurchaseEnvelope'
+        bindings:
+          type: object
+          additionalProperties: true
+        assurance:
+          type: object
+          additionalProperties: false
+          required:
+          - projection_fields_valid
+          - source_signature_verified
+          - source_trust_verified
+          - delegated_authority_verified
+          - payment_credential_verified
+          - settlement_verified
+          - enforcement_authorized
+          properties:
+            projection_fields_valid:
+              const: true
+              description: The fields used by the documented MandateShield projection passed adapter validation. This is not full source-protocol conformance.
+            source_signature_verified:
+              const: false
+            source_trust_verified:
+              const: false
+            delegated_authority_verified:
+              const: false
+            payment_credential_verified:
+              const: false
+            settlement_verified:
+              const: false
+            enforcement_authorized:
+              const: false
+        next_step:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
     PurchaseEnvelope:
       type: object
       additionalProperties: true
@@ -737,79 +810,6 @@ components:
               required:
               - atomic_units
               - asset_decimals
-    ProtocolAdapterResult:
-      type: object
-      additionalProperties: false
-      required:
-      - adapter
-      - adapter_version
-      - protocol
-      - source_digest
-      - envelope_digest
-      - envelope
-      - bindings
-      - assurance
-      - next_step
-      - warnings
-      properties:
-        adapter:
-          type: string
-          enum:
-          - AP2_CLOSED_PAYMENT_SD_JWT
-          - X402_V2_PAYMENT_REQUIRED
-          - MPP_HTTP_PAYMENT_CHALLENGE
-        adapter_version:
-          const: 1.0.0
-        protocol:
-          type: string
-          enum:
-          - AP2
-          - X402
-          - MPP
-        source_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        envelope_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        envelope:
-          $ref: '#/components/schemas/PurchaseEnvelope'
-        bindings:
-          type: object
-          additionalProperties: true
-        assurance:
-          type: object
-          additionalProperties: false
-          required:
-          - projection_fields_valid
-          - source_signature_verified
-          - source_trust_verified
-          - delegated_authority_verified
-          - payment_credential_verified
-          - settlement_verified
-          - enforcement_authorized
-          properties:
-            projection_fields_valid:
-              const: true
-              description: The fields used by the documented MandateShield projection passed adapter validation. This is not full source-protocol conformance.
-            source_signature_verified:
-              const: false
-            source_trust_verified:
-              const: false
-            delegated_authority_verified:
-              const: false
-            payment_credential_verified:
-              const: false
-            settlement_verified:
-              const: false
-            enforcement_authorized:
-              const: false
-        next_step:
-          type: string
-        warnings:
-          type: array
-          items:
-            type: string
   responses:
     TooLarge:
       description: Request exceeds the endpoint size limit
