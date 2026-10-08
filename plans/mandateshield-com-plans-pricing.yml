@@ -133,3 +133,38 @@ enterprise: No separate enterprise tier is listed; enterprise SLA only by writte
 note: Every published price, quota, overage, retention window and key count above was read verbatim from /pricing
   on 2026-09-19. The pricing page also carries a cost-per-decision calculator that the provider states is not a
   loss estimate, ROI claim or promise of savings.
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models:
+  - hybrid
+  units: []
+  plans:
+  - name: Starter
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods:
+    - month
+  - name: Growth
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods:
+    - month
+  - name: Scale
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods:
+    - month
+  - name: Machine
+    access: other
+    model: hybrid
+    model_how: derived
+    units: []
+    periods:
+    - month
