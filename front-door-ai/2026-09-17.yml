@@ -1,0 +1,31 @@
+# Front Door AI Index — mandateshield-com — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: mandateshield-com
+  lexicon_version: '1.0'
+  probed_at: '2026-09-25'
+  host: mandateshield.com
+  final_host: mandateshield.com
+  ownership: own
+  owner: mandateshield-com
+  shares_host_with: null
+  inherited_from: null
+  alias_of: null
+  verdict: scored
+  score: 15
+  band: 5
+  band_label: prominent
+  host_score: 15
+  density: 6.84
+  words: 2194
+  tiers:
+    agentic: 3
+    core: 12
+    model: 0
+  ambiguous: 12
+  top_terms:
+    AI: 12
+    agent: 12
+    MCP: 2
+    AI agent: 1
