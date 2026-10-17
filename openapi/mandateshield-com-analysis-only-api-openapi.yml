@@ -107,25 +107,62 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 components:
+  responses:
+    Unauthorized:
+      description: API key is missing, invalid or revoked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Invalid JSON, shape or parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LegalAcceptanceRequired:
+      description: The authenticated live account has not accepted the current business agreements
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
+    TooLarge:
+      description: Request exceeds the endpoint size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    Finding:
+    LegalAcceptanceRequiredError:
       type: object
       additionalProperties: false
       required:
+      - error
       - code
-      - message
-      - severity
+      - terms_version
+      - acceptance_url
       properties:
+        error:
+          type: string
         code:
+          const: LEGAL_ACCEPTANCE_REQUIRED
+        terms_version:
           type: string
-        message:
+          const: 2026-07-28.2
+        acceptance_url:
           type: string
-        severity:
-          type: string
-          enum:
-          - high
-          - medium
-          - low
+          format: uri
+          const: https://mandateshield.com/dashboard?legal=required
+    AnalysisDecision:
+      allOf:
+      - $ref: '#/components/schemas/PreflightDecision'
+      - type: object
+        required:
+        - enforcement_authorized
+        properties:
+          enforcement_authorized:
+            const: false
+            description: The v1 analysis profile never authorizes execution.
     Risk:
       type: object
       required:
@@ -157,26 +194,6 @@ components:
           type:
           - string
           - 'null'
-    LegalAcceptanceRequiredError:
-      type: object
-      additionalProperties: false
-      required:
-      - error
-      - code
-      - terms_version
-      - acceptance_url
-      properties:
-        error:
-          type: string
-        code:
-          const: LEGAL_ACCEPTANCE_REQUIRED
-        terms_version:
-          type: string
-          const: 2026-07-28.2
-        acceptance_url:
-          type: string
-          format: uri
-          const: https://mandateshield.com/dashboard?legal=required
     MandateBinding:
       type: object
       additionalProperties: false
@@ -196,27 +213,6 @@ components:
           pattern: ^sha256:[a-f0-9]{64}$
         source:
           const: ACCOUNT_REGISTRY
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
-    AnalysisDecision:
-      allOf:
-      - $ref: '#/components/schemas/PreflightDecision'
-      - type: object
-        required:
-        - enforcement_authorized
-        properties:
-          enforcement_authorized:
-            const: false
-            description: The v1 analysis profile never authorizes execution.
     PreflightDecision:
       type: object
       required:
@@ -294,6 +290,24 @@ components:
           oneOf:
           - $ref: '#/components/schemas/MandateBinding'
           - type: 'null'
+    Finding:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - message
+      - severity
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum:
+          - high
+          - medium
+          - low
     PurchaseEnvelope:
       type: object
       additionalProperties: true
@@ -700,31 +714,17 @@ components:
               required:
               - atomic_units
               - asset_decimals
-  responses:
-    LegalAcceptanceRequired:
-      description: The authenticated live account has not accepted the current business agreements
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/LegalAcceptanceRequiredError'
-    Unauthorized:
-      description: API key is missing, invalid or revoked
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    TooLarge:
-      description: Request exceeds the endpoint size limit
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: Invalid JSON, shape or parameter
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
   securitySchemes:
     hostingSession:
       type: apiKey

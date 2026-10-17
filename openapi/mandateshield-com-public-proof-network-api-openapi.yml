@@ -291,52 +291,80 @@ components:
               const: false
             non_authorizing:
               const: true
-    PublicProofSubjectInput:
-      oneOf:
-      - type: object
-        additionalProperties: false
-        required:
-        - kind
-        - uri
-        properties:
-          kind:
-            const: https-domain
-          uri:
-            type: string
-            format: uri
-            pattern: ^https://
-            maxLength: 512
-      - type: object
-        additionalProperties: false
-        required:
-        - kind
-        - uri
-        properties:
-          kind:
-            const: github-repository
-          uri:
-            type: string
-            format: uri
-            pattern: ^https://github\.com/[^/]+/[^/]+/?$
-            maxLength: 512
-    PublicProofAttestationRequest:
+    PublicProofConformanceReport:
       type: object
       additionalProperties: false
       required:
-      - challenge_token
-      - publisher_terms_accepted
+      - format
+      - profile
+      - profile_version
+      - scope
+      - runner
+      - executed_at
+      - results
       properties:
-        challenge_token:
+        format:
+          const: application/mandateshield-conformance-report+json;v=1
+        profile:
+          const: https://mandateshield.com/conformance/v1
+        profile_version:
+          const: 1.0.0
+        scope:
+          const: OFFLINE_POLICY_VECTORS
+        runner:
+          type: object
+          additionalProperties: false
+          required:
+          - name
+          - version
+          properties:
+            name:
+              type: string
+              minLength: 1
+              maxLength: 80
+            version:
+              type: string
+              minLength: 1
+              maxLength: 40
+        executed_at:
           type: string
-          minLength: 1
-          maxLength: 64000
-        repository_commit:
-          type: string
-          pattern: ^[a-fA-F0-9]{40}$
-          description: Required only for a GitHub-repository challenge, forbidden for an HTTPS-domain challenge, and required to equal the claimed repository's current default-branch HEAD at verification time.
-        publisher_terms_accepted:
-          const: true
-          description: Required affirmative acceptance of subject-control, publication-rights, correction, expiry, revocation and takedown rules.
+          format: date-time
+        results:
+          type: array
+          minItems: 8
+          maxItems: 8
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - vector_id
+            - actual_decision
+            - actual_finding_codes
+            properties:
+              vector_id:
+                type: string
+                enum:
+                - fiat-usd-exact-minor-units
+                - fiat-conflicting-minor-units
+                - fiat-jpy-fractional-major-unit
+                - x402-exact-beyond-safe-integer
+                - x402-one-unit-over-cap
+                - x402-resource-substitution
+                - strict-unknown-constraint-field
+                - replay-key-invalid-characters
+              actual_decision:
+                type: string
+                enum:
+                - ALLOW
+                - REVIEW
+                - BLOCK
+              actual_finding_codes:
+                type: array
+                maxItems: 64
+                uniqueItems: true
+                items:
+                  type: string
+                  pattern: ^[A-Z][A-Z0-9_]{0,79}$
     PublicProofSummary:
       type: object
       additionalProperties: true
@@ -393,73 +421,35 @@ components:
         badge:
           type: object
           additionalProperties: true
-    PublisherTermsRequiredError:
+    PublicProofAttestationRequest:
       type: object
       additionalProperties: false
       required:
-      - error
-      - code
+      - challenge_token
+      - publisher_terms_accepted
       properties:
-        error:
+        challenge_token:
           type: string
-        code:
-          const: PUBLISHER_TERMS_REQUIRED
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
+          minLength: 1
+          maxLength: 64000
+        repository_commit:
           type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
-    PublicProofNetworkList:
+          pattern: ^[a-fA-F0-9]{40}$
+          description: Required only for a GitHub-repository challenge, forbidden for an HTTPS-domain challenge, and required to equal the claimed repository's current default-branch HEAD at verification time.
+        publisher_terms_accepted:
+          const: true
+          description: Required affirmative acceptance of subject-control, publication-rights, correction, expiry, revocation and takedown rules.
+    PublicProofChallengeRequest:
       type: object
       additionalProperties: false
       required:
-      - format
-      - status
-      - proofs
-      - semantics
-      - caveat
+      - subject
+      - report
       properties:
-        format:
-          const: application/mandateshield-proof-network+json;v=1
-        status:
-          type: string
-          enum:
-          - EMPTY
-          - ACTIVE
-        proofs:
-          type: array
-          maxItems: 50
-          items:
-            $ref: '#/components/schemas/PublicProofSummary'
-        semantics:
-          type: object
-          additionalProperties: false
-          required:
-          - entries_are_users
-          - entries_are_installations
-          - client_telemetry_included
-          - hosted_sandbox_included
-          - independent_conformance_claimed
-          properties:
-            entries_are_users:
-              const: false
-            entries_are_installations:
-              const: false
-            client_telemetry_included:
-              const: false
-            hosted_sandbox_included:
-              const: false
-            independent_conformance_claimed:
-              const: false
-        caveat:
-          type: string
-          description: Every entry is an externally bound self-report, not a customer, user, installation, certification or independently executed conformance result.
+        subject:
+          $ref: '#/components/schemas/PublicProofSubjectInput'
+        report:
+          $ref: '#/components/schemas/PublicProofConformanceReport'
     PublicProofAttestation:
       type: object
       additionalProperties: true
@@ -607,92 +597,108 @@ components:
           type: boolean
         created:
           type: boolean
-    PublicProofChallengeRequest:
+    PublicProofSubjectInput:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+        - kind
+        - uri
+        properties:
+          kind:
+            const: https-domain
+          uri:
+            type: string
+            format: uri
+            pattern: ^https://
+            maxLength: 512
+      - type: object
+        additionalProperties: false
+        required:
+        - kind
+        - uri
+        properties:
+          kind:
+            const: github-repository
+          uri:
+            type: string
+            format: uri
+            pattern: ^https://github\.com/[^/]+/[^/]+/?$
+            maxLength: 512
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+    PublisherTermsRequiredError:
       type: object
       additionalProperties: false
       required:
-      - subject
-      - report
+      - error
+      - code
       properties:
-        subject:
-          $ref: '#/components/schemas/PublicProofSubjectInput'
-        report:
-          $ref: '#/components/schemas/PublicProofConformanceReport'
-    PublicProofConformanceReport:
+        error:
+          type: string
+        code:
+          const: PUBLISHER_TERMS_REQUIRED
+    PublicProofNetworkList:
       type: object
       additionalProperties: false
       required:
       - format
-      - profile
-      - profile_version
-      - scope
-      - runner
-      - executed_at
-      - results
+      - status
+      - proofs
+      - semantics
+      - caveat
       properties:
         format:
-          const: application/mandateshield-conformance-report+json;v=1
-        profile:
-          const: https://mandateshield.com/conformance/v1
-        profile_version:
-          const: 1.0.0
-        scope:
-          const: OFFLINE_POLICY_VECTORS
-        runner:
+          const: application/mandateshield-proof-network+json;v=1
+        status:
+          type: string
+          enum:
+          - EMPTY
+          - ACTIVE
+        proofs:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/PublicProofSummary'
+        semantics:
           type: object
           additionalProperties: false
           required:
-          - name
-          - version
+          - entries_are_users
+          - entries_are_installations
+          - client_telemetry_included
+          - hosted_sandbox_included
+          - independent_conformance_claimed
           properties:
-            name:
-              type: string
-              minLength: 1
-              maxLength: 80
-            version:
-              type: string
-              minLength: 1
-              maxLength: 40
-        executed_at:
+            entries_are_users:
+              const: false
+            entries_are_installations:
+              const: false
+            client_telemetry_included:
+              const: false
+            hosted_sandbox_included:
+              const: false
+            independent_conformance_claimed:
+              const: false
+        caveat:
           type: string
-          format: date-time
-        results:
-          type: array
-          minItems: 8
-          maxItems: 8
-          items:
-            type: object
-            additionalProperties: false
-            required:
-            - vector_id
-            - actual_decision
-            - actual_finding_codes
-            properties:
-              vector_id:
-                type: string
-                enum:
-                - fiat-usd-exact-minor-units
-                - fiat-conflicting-minor-units
-                - fiat-jpy-fractional-major-unit
-                - x402-exact-beyond-safe-integer
-                - x402-one-unit-over-cap
-                - x402-resource-substitution
-                - strict-unknown-constraint-field
-                - replay-key-invalid-characters
-              actual_decision:
-                type: string
-                enum:
-                - ALLOW
-                - REVIEW
-                - BLOCK
-              actual_finding_codes:
-                type: array
-                maxItems: 64
-                uniqueItems: true
-                items:
-                  type: string
-                  pattern: ^[A-Z][A-Z0-9_]{0,79}$
+          description: Every entry is an externally bound self-report, not a customer, user, installation, certification or independently executed conformance result.
   responses:
+    BadRequest:
+      description: Invalid JSON, shape or parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     PublisherTermsRequired:
       description: The publisher did not affirmatively accept the public-proof publication rules
       content:
@@ -701,12 +707,6 @@ components:
             $ref: '#/components/schemas/PublisherTermsRequiredError'
     TooLarge:
       description: Request exceeds the endpoint size limit
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: Invalid JSON, shape or parameter
       content:
         application/json:
           schema:

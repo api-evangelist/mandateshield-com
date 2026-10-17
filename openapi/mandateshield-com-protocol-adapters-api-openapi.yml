@@ -319,18 +319,20 @@ paths:
         '413':
           $ref: '#/components/responses/TooLarge'
 components:
+  responses:
+    BadRequest:
+      description: Invalid JSON, shape or parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooLarge:
+      description: Request exceeds the endpoint size limit
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
     ProtocolAdapterResult:
       type: object
       additionalProperties: false
@@ -810,19 +812,17 @@ components:
               required:
               - atomic_units
               - asset_decimals
-  responses:
-    TooLarge:
-      description: Request exceeds the endpoint size limit
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: Invalid JSON, shape or parameter
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
   securitySchemes:
     hostingSession:
       type: apiKey

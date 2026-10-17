@@ -122,149 +122,6 @@ paths:
                 type: string
 components:
   schemas:
-    DeploymentActivationBinding:
-      type: object
-      additionalProperties: false
-      required:
-      - method
-      - evidence_digest
-      - verified_at
-      - subject_control_verified_at_binding
-      properties:
-        method:
-          type: string
-          enum:
-          - DNS_TXT_CONTROL
-          - GITHUB_COMMIT_FILE
-        evidence_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        verified_at:
-          type: string
-          format: date-time
-          description: The recorded time when subject control was verified. Final proof issuance does not re-verify subject control.
-        subject_control_verified_at_binding:
-          const: true
-    DeploymentActivationBadge:
-      type: object
-      additionalProperties: false
-      required:
-      - url
-      - alt
-      - markdown
-      properties:
-        url:
-          type: string
-          format: uri
-        alt:
-          const: MandateShield server-observed activation
-        markdown:
-          type: string
-    DeploymentActivationSubject:
-      type: object
-      additionalProperties: false
-      required:
-      - kind
-      - uri
-      - repository
-      - commit
-      properties:
-        kind:
-          type: string
-          enum:
-          - HTTPS_DOMAIN
-          - GITHUB_REPOSITORY
-        uri:
-          type: string
-          format: uri
-        repository:
-          type:
-          - string
-          - 'null'
-        commit:
-          type:
-          - string
-          - 'null'
-          pattern: ^[a-f0-9]{40}$
-    DeploymentActivationObservation:
-      type: object
-      additionalProperties: false
-      required:
-      - activation_chain_digest
-      - provider_profile
-      - provider_environment
-      - strict_live_reservation_server_observed
-      - provider_permit_redeemed
-      - mandateshield_provider_submission_observed
-      - mandateshield_provider_enforcement_observed
-      - provider_evidence_recorded
-      - independent_terminal_evidence_verified
-      properties:
-        activation_chain_digest:
-          type: string
-          pattern: ^sha256:[a-f0-9]{64}$
-        provider_profile:
-          const: GENERIC_HTTP_V1
-        provider_environment:
-          const: test
-        strict_live_reservation_server_observed:
-          const: true
-        provider_permit_redeemed:
-          const: true
-        mandateshield_provider_submission_observed:
-          const: false
-        mandateshield_provider_enforcement_observed:
-          const: false
-        provider_evidence_recorded:
-          const: false
-        independent_terminal_evidence_verified:
-          const: false
-    DeploymentActivationProofSummary:
-      type: object
-      additionalProperties: false
-      required:
-      - proof_id
-      - attestation_type
-      - subject
-      - binding
-      - activation
-      - eligibility
-      - assurance
-      - issued_at
-      - expires_at
-      - human_uri
-      - proof_uri
-      - badge
-      properties:
-        proof_id:
-          type: string
-          pattern: ^mdp_[a-f0-9]{32}$
-        attestation_type:
-          const: ACCOUNT_BOUND_SERVER_OBSERVED_ACTIVATION
-        subject:
-          $ref: '#/components/schemas/DeploymentActivationSubject'
-        binding:
-          $ref: '#/components/schemas/DeploymentActivationBinding'
-        activation:
-          $ref: '#/components/schemas/DeploymentActivationObservation'
-        eligibility:
-          $ref: '#/components/schemas/DeploymentActivationEligibility'
-        assurance:
-          $ref: '#/components/schemas/DeploymentActivationAssurance'
-        issued_at:
-          type: string
-          format: date-time
-        expires_at:
-          type: string
-          format: date-time
-        human_uri:
-          type: string
-          format: uri
-        proof_uri:
-          type: string
-          format: uri
-        badge:
-          $ref: '#/components/schemas/DeploymentActivationBadge'
     DeploymentActivationProofList:
       type: object
       additionalProperties: false
@@ -318,55 +175,6 @@ components:
               const: false
             entries_are_audits_or_certifications:
               const: false
-    DeploymentActivationAssurance:
-      type: object
-      additionalProperties: false
-      required:
-      - counts_as_verified_activation
-      - counts_as_customer
-      - counts_as_revenue
-      - deployment_runtime_inspected
-      - non_bypassability_verified
-      - independent_organization_verified
-      - audit
-      - certification
-      - security_guarantee
-      - non_authorizing
-      - observation_scope
-      properties:
-        counts_as_verified_activation:
-          const: true
-        counts_as_customer:
-          const: false
-        counts_as_revenue:
-          const: false
-        deployment_runtime_inspected:
-          const: false
-        non_bypassability_verified:
-          const: false
-        independent_organization_verified:
-          const: false
-        audit:
-          const: false
-        certification:
-          const: false
-        security_guarantee:
-          const: false
-        non_authorizing:
-          const: true
-        observation_scope:
-          const: MandateShield observed no provider submission or provider evidence in this proof flow. Out-of-band activity is outside this proof.
-    Error:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          type: string
-        code:
-          type: string
-        enforcement_authorized:
-          type: boolean
     DeploymentActivationProof:
       type: object
       additionalProperties: false
@@ -447,6 +255,90 @@ components:
         caveat:
           type: string
           description: Must state the exact positive observations and every material non-claim.
+    DeploymentActivationBadge:
+      type: object
+      additionalProperties: false
+      required:
+      - url
+      - alt
+      - markdown
+      properties:
+        url:
+          type: string
+          format: uri
+        alt:
+          const: MandateShield server-observed activation
+        markdown:
+          type: string
+    DeploymentActivationBinding:
+      type: object
+      additionalProperties: false
+      required:
+      - method
+      - evidence_digest
+      - verified_at
+      - subject_control_verified_at_binding
+      properties:
+        method:
+          type: string
+          enum:
+          - DNS_TXT_CONTROL
+          - GITHUB_COMMIT_FILE
+        evidence_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        verified_at:
+          type: string
+          format: date-time
+          description: The recorded time when subject control was verified. Final proof issuance does not re-verify subject control.
+        subject_control_verified_at_binding:
+          const: true
+    DeploymentActivationProofSummary:
+      type: object
+      additionalProperties: false
+      required:
+      - proof_id
+      - attestation_type
+      - subject
+      - binding
+      - activation
+      - eligibility
+      - assurance
+      - issued_at
+      - expires_at
+      - human_uri
+      - proof_uri
+      - badge
+      properties:
+        proof_id:
+          type: string
+          pattern: ^mdp_[a-f0-9]{32}$
+        attestation_type:
+          const: ACCOUNT_BOUND_SERVER_OBSERVED_ACTIVATION
+        subject:
+          $ref: '#/components/schemas/DeploymentActivationSubject'
+        binding:
+          $ref: '#/components/schemas/DeploymentActivationBinding'
+        activation:
+          $ref: '#/components/schemas/DeploymentActivationObservation'
+        eligibility:
+          $ref: '#/components/schemas/DeploymentActivationEligibility'
+        assurance:
+          $ref: '#/components/schemas/DeploymentActivationAssurance'
+        issued_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        human_uri:
+          type: string
+          format: uri
+        proof_uri:
+          type: string
+          format: uri
+        badge:
+          $ref: '#/components/schemas/DeploymentActivationBadge'
     DeploymentActivationEligibility:
       type: object
       additionalProperties: false
@@ -470,6 +362,114 @@ components:
         operator_exclusion_no_match_at_evaluation:
           const: true
           description: A no-match against published exclusions at evaluated_at, not an issuance-time recheck or independent identity or ownership verification.
+    DeploymentActivationObservation:
+      type: object
+      additionalProperties: false
+      required:
+      - activation_chain_digest
+      - provider_profile
+      - provider_environment
+      - strict_live_reservation_server_observed
+      - provider_permit_redeemed
+      - mandateshield_provider_submission_observed
+      - mandateshield_provider_enforcement_observed
+      - provider_evidence_recorded
+      - independent_terminal_evidence_verified
+      properties:
+        activation_chain_digest:
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        provider_profile:
+          const: GENERIC_HTTP_V1
+        provider_environment:
+          const: test
+        strict_live_reservation_server_observed:
+          const: true
+        provider_permit_redeemed:
+          const: true
+        mandateshield_provider_submission_observed:
+          const: false
+        mandateshield_provider_enforcement_observed:
+          const: false
+        provider_evidence_recorded:
+          const: false
+        independent_terminal_evidence_verified:
+          const: false
+    DeploymentActivationAssurance:
+      type: object
+      additionalProperties: false
+      required:
+      - counts_as_verified_activation
+      - counts_as_customer
+      - counts_as_revenue
+      - deployment_runtime_inspected
+      - non_bypassability_verified
+      - independent_organization_verified
+      - audit
+      - certification
+      - security_guarantee
+      - non_authorizing
+      - observation_scope
+      properties:
+        counts_as_verified_activation:
+          const: true
+        counts_as_customer:
+          const: false
+        counts_as_revenue:
+          const: false
+        deployment_runtime_inspected:
+          const: false
+        non_bypassability_verified:
+          const: false
+        independent_organization_verified:
+          const: false
+        audit:
+          const: false
+        certification:
+          const: false
+        security_guarantee:
+          const: false
+        non_authorizing:
+          const: true
+        observation_scope:
+          const: MandateShield observed no provider submission or provider evidence in this proof flow. Out-of-band activity is outside this proof.
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        enforcement_authorized:
+          type: boolean
+    DeploymentActivationSubject:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - uri
+      - repository
+      - commit
+      properties:
+        kind:
+          type: string
+          enum:
+          - HTTPS_DOMAIN
+          - GITHUB_REPOSITORY
+        uri:
+          type: string
+          format: uri
+        repository:
+          type:
+          - string
+          - 'null'
+        commit:
+          type:
+          - string
+          - 'null'
+          pattern: ^[a-f0-9]{40}$
   responses:
     BadRequest:
       description: Invalid JSON, shape or parameter
