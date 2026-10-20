@@ -1,6 +1,15 @@
 {
-  "jsonrpc": "2.0",
-  "id": 1,
+  "endpoint": "https://mandateshield.com/api/mcp",
+  "captured": "2026-10-20",
+  "method": "initialize + tools/list (anonymous, no tool called; roadmap#992)",
+  "protocol_version": "2025-06-18",
+  "server_info": {
+    "name": "mandateshield",
+    "title": "MandateShield AI Payment Evidence",
+    "version": "1.13.3",
+    "description": "Fail-closed execution integrity and authority evidence for AI payments.",
+    "websiteUrl": "https://mandateshield.com"
+  },
   "result": {
     "tools": [
       {
@@ -703,7 +712,7 @@
             ]
           },
           "openai/outputTemplate": "ui://mandateshield/preflight-v1.html",
-          "openai/toolInvocation/invoking": "Checking payment authority\u2026",
+          "openai/toolInvocation/invoking": "Checking payment authority…",
           "openai/toolInvocation/invoked": "Payment authority checked"
         }
       },
@@ -1723,7 +1732,7 @@
           "idempotentHint": true
         },
         "_meta": {
-          "openai/toolInvocation/invoking": "Normalizing payment protocol\u2026",
+          "openai/toolInvocation/invoking": "Normalizing payment protocol…",
           "openai/toolInvocation/invoked": "Payment protocol normalized"
         }
       },
@@ -2569,7 +2578,7 @@
             ]
           },
           "openai/outputTemplate": "ui://mandateshield/preflight-v1.html",
-          "openai/toolInvocation/invoking": "Verifying signed authority\u2026",
+          "openai/toolInvocation/invoking": "Verifying signed authority…",
           "openai/toolInvocation/invoked": "Cryptographic authority verified"
         }
       }
