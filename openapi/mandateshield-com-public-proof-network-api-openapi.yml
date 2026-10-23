@@ -736,3 +736,9 @@ x-mandateshield-release:
     llms: https://mandateshield.com/llms/1.13.0.txt
     llms_full: https://mandateshield.com/llms-full/1.13.0.txt
     discovery: https://mandateshield.com/discovery/1.13.0.json
+x-provenance:
+  method: harvested
+  publisher: MandateShield
+  source: https://mandateshield.com/openapi.json
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
