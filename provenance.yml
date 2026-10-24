@@ -45,7 +45,13 @@ artifacts:
   front-door-ai/2026-09-17.yml:
     method: unknown
     evidence: no authorship recorded
-  kin/checks-2026-09-24T161608.yml:
+  integrations/_index.yml:
+    method: generated
+    evidence: carries an API Evangelist house phrase
+  integrations/mandateshield-com-integration-edges.yml:
+    method: searched
+    evidence: declared in the artifact
+  kin/checks-2026-10-11T110117.yml:
     method: generated
     evidence: Kin Score snapshot written by score.rb
   kin/score-2026-09-19T193153.yml:
@@ -78,6 +84,21 @@ artifacts:
   kin/score-2026-09-24T161608.yml:
     method: generated
     evidence: Kin Score snapshot written by score.rb
+  kin/score-2026-09-25T210408.yml:
+    method: generated
+    evidence: Kin Score snapshot written by score.rb
+  kin/score-2026-09-25T232841.yml:
+    method: generated
+    evidence: Kin Score snapshot written by score.rb
+  kin/score-2026-10-03T000835.yml:
+    method: generated
+    evidence: Kin Score snapshot written by score.rb
+  kin/score-2026-10-03T024842.yml:
+    method: generated
+    evidence: Kin Score snapshot written by score.rb
+  kin/score-2026-10-11T110117.yml:
+    method: generated
+    evidence: Kin Score snapshot written by score.rb
   lifecycle/mandateshield-com-lifecycle.yml:
     method: searched
     evidence: declared in the artifact
@@ -98,12 +119,133 @@ artifacts:
     evidence: no authorship recorded
   openapi/_original/mandateshield-com-openapi.json:
     method: harvested
-    evidence: found in openapi/_original/; the fetch URL and bytes were not recorded, so byte-identity
-      to the provider's source is unverified
-  openapi/mandateshield-com-openapi.yml:
+    evidence: the same operations as https://mandateshield.com/openapi.json (sha256 ca6d21b2f084, fetched
+      2026-10-04)
+  openapi/_original/mandateshield-com-openapi.yml:
+    method: harvested
+    evidence: the same operations as https://mandateshield.com/openapi.json (sha256 ca6d21b2f084, fetched
+      2026-10-04)
+  openapi/mandateshield-com-account-execution-control-api-openapi.yml:
     method: derived
     evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-advisory-intelligence-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-analysis-only-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-deployment-activation-proofs-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-deployment-proofs-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-execution-authorizations-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-execution-evidence-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-execution-permits-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-execution-receipts-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-normalize-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-preflight-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-production-authority-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-proof-network-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-protocol-adapters-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-provider-submissions-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-public-proof-network-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-public-sandbox-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-receipts-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-sandbox-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/mandateshield-com-verify-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  overlays/mandateshield-com-account-execution-control-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-advisory-intelligence-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-analysis-only-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-deployment-activation-proofs-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-deployment-proofs-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-execution-authorizations-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-execution-evidence-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-execution-permits-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-execution-receipts-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-normalize-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
   overlays/mandateshield-com-openapi-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-preflight-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-production-authority-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-proof-network-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-protocol-adapters-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-provider-submissions-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-public-proof-network-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-public-sandbox-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-receipts-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-sandbox-api-phrasing-overlay.yaml:
+    method: generated
+    evidence: declared in the artifact
+  overlays/mandateshield-com-verify-api-phrasing-overlay.yaml:
     method: generated
     evidence: declared in the artifact
   packages/mandateshield-com-packages.yml:
